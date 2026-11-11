@@ -139,6 +139,8 @@ input.f,textarea.f{width:100%;padding:8px;border:1px solid var(--line);border-ra
  .pl,.two,.top2{grid-template-columns:1fr}.counter{grid-column:1}
  .cd{min-height:56px}
 }
+ .ac{display:inline-block;width:1.05em;height:1.17em;vertical-align:-.24em;margin:0 1px}.ac svg{width:100%;height:100%;display:block}
+.outf{grid-template-columns:repeat(auto-fill,minmax(88px,1fr))}.outf div{text-align:center}.pc{display:block;font-size:14px;color:var(--orange);line-height:1.2;padding-bottom:2px}
 </style>
 </head>
 <body class="pat-grid">
@@ -252,23 +254,33 @@ const MOODS = ['😊 기분 좋음','📚 열공 중','😴 졸려요','😭 시
 
 /* ================= 픽셀 캐릭터 ================= */
 const SKINS = ['#ffe6d5','#fbd5bd','#eebb98','#c98f66'];
-const HAIRS = ['#7a5444','#a9805f','#e6cf9f','#2a2224','#4a342e','#d9899f'];
+const HAIRS = ['#2a2224','#4a342e','#7a5444','#a9805f','#e6cf9f','#f5ecd2','#e58b4a','#c0272d','#d9899f','#a8d8ee','#c4b5ee','#2b3a6b'];
 const EYES = ['#3a2a2a','#7a5a3a','#5f8a4a','#6f7f95'];
-const HAIRSTYLES = [['long','생머리'],['wavy','웨이브'],['twin','양갈래'],['bob','단발'],['bun','똥머리']];
+const HAIRSTYLES = [['long','생머리'],['wavy','웨이브'],['bob','단발'],['twin','양갈래'],['bun','똥머리'],['pony','포니테일'],['buns','양쪽 똥머리'],['braid','땋은 머리']];
 const BANGS = [['full','앞머리'],['part','가르마'],['none','넘김']];
-const HATS = [['none','없음'],['phones','헤드폰'],['beret','베레모'],['band','머리띠'],['sprout','새싹']];
-const HATC = ['#f7f0dc','#2b2a2e','#c2262e','#b7a8e6','#f2a9bd'];
-const CLIPS = [['none','없음'],['heart','하트핀'],['bow','리본핀']];
+const HATS = [['none','없음'],['band','머리띠'],['phones','헤드폰'],['earm','귀마개'],['beret','베레모'],['ribbon','리본'],['sprout','새싹']];
+const HATC = ['#f7f0dc','#2b2a2e','#c2262e','#b7a8e6','#f2a9bd','#ffffff'];
+const CLIPS = [['none','없음'],['heart','하트핀'],['bow','리본핀'],['star','별핀'],['berry','딸기핀'],['clover','클로버']];
 const OUTFITS = [
- {n:'크림 원피스',k:'dress',top:'#f4e8d2',skirt:'#f4e8d2',collar:'#ffffff',sleeve:'#fbf5e8',sock:'#ffffff',shoe:'#f2f2f2'},
- {n:'핑크 니트',k:'skirt',top:'#f6b9c8',skirt:'#fdf9f6',trim:'#f6b9c8',sock:'#ffffff',shoe:'#f5d9df'},
- {n:'블랙 조끼',k:'dress',top:'#2f2d34',skirt:'#2f2d34',shirt:'#ffffff',sleeve:'#ffffff',trim:'#ffffff',bow:'#ffffff',sock:'#ffffff',shoe:'#2f2d34'},
- {n:'연두 원피스',k:'dress',top:'#bfd7a3',skirt:'#bfd7a3',collar:'#ffffff',bow:'#3c3c44',sock:'#f3f3e8',shoe:'#8c8a52'},
- {n:'라벤더 니트',k:'skirt',top:'#c6b6ee',skirt:'#ffffff',trim:'#e4dcf8',sock:'#ffffff',shoe:'#ffffff'},
- {n:'브라운 조끼',k:'skirt',top:'#a97b55',shirt:'#ffffff',sleeve:'#ffffff',skirt:'#e8d8b8',plaid:1,sock:'#ffffff',shoe:'#2a2f55'},
- {n:'레드 원피스',k:'dress',top:'#c9302f',skirt:'#c9302f',collar:'#c9302f',bow:'#ee5a66',sock:'#ffffff',shoe:'#a82424'},
- {n:'청바지',k:'pants',top:'#f6b9c8',pants:'#6d8fb8',shoe:'#ffffff'}
+ {n:'크림 원피스',p:0,k:'dress',top:'#f4e8d2',skirt:'#f4e8d2',collar:'#ffffff',sleeve:'#fbf5e8',sock:'#ffffff',shoe:'#f2f2f2'},
+ {n:'핑크 니트',p:0,k:'skirt',top:'#f6b9c8',skirt:'#fdf9f6',trim:'#f6b9c8',sock:'#ffffff',shoe:'#f5d9df'},
+ {n:'블랙 조끼',p:3,k:'dress',top:'#2f2d34',skirt:'#2f2d34',shirt:'#ffffff',sleeve:'#ffffff',trim:'#ffffff',bow:'#ffffff',sock:'#ffffff',shoe:'#2f2d34'},
+ {n:'연두 원피스',p:3,k:'dress',top:'#bfd7a3',skirt:'#bfd7a3',collar:'#ffffff',bow:'#3c3c44',sock:'#f3f3e8',shoe:'#8c8a52'},
+ {n:'라벤더 니트',p:3,k:'skirt',top:'#c6b6ee',skirt:'#ffffff',trim:'#e4dcf8',sock:'#ffffff',shoe:'#ffffff'},
+ {n:'브라운 조끼',p:3,k:'skirt',top:'#a97b55',shirt:'#ffffff',sleeve:'#ffffff',skirt:'#e8d8b8',plaid:1,sock:'#ffffff',shoe:'#2a2f55'},
+ {n:'레드 원피스',p:4,k:'dress',top:'#c9302f',skirt:'#c9302f',collar:'#c9302f',bow:'#ee5a66',sock:'#ffffff',shoe:'#a82424'},
+ {n:'청바지',p:0,k:'pants',top:'#f6b9c8',pants:'#6d8fb8',shoe:'#ffffff'},
+ {n:'교복',p:5,k:'skirt',top:'#ffffff',cardi:'#2b3159',skirt:'#2b3159',plaid:1,collar:'#ffffff',bow:'#c9302f',sock:'#ffffff',shoe:'#2b2a2e'},
+ {n:'노랑 원피스',p:3,k:'dress',top:'#f7dd7a',skirt:'#f7dd7a',collar:'#ffffff',bow:'#2f4f9a',sock:'#ffffff',shoe:'#d6b98a'},
+ {n:'아이보리 카디건',p:4,k:'skirt',top:'#f6b9c8',cardi:'#f4e8d2',skirt:'#f4e8d2',sock:'#f7c8d3',shoe:'#f5d9df'},
+ {n:'목도리 코트',p:4,k:'skirt',top:'#e9dcc3',cardi:'#a98a62',scarf:'#f4e8d2',skirt:'#f4e8d2',sock:'#ffffff',shoe:'#2b2a2e'},
+ {n:'회색 맨투맨',p:3,k:'dress',top:'#b8bcc4',skirt:'#b8bcc4',sock:'#ffffff',shoe:'#2b2a2e'},
+ {n:'민트 카디건',p:4,k:'pants',top:'#ffffff',cardi:'#a7dcc6',pants:'#f3efe6',shoe:'#ffffff'},
+ {n:'레드 후드',p:5,k:'pants',top:'#ffffff',cardi:'#c9302f',pants:'#c9302f',shoe:'#ffffff'}
 ];
+/* 가격: 0 = 기본 무료, 나머지는 도토리로 구입 */
+const PRICE = {hs:{long:0,wavy:0,bob:0,twin:2,bun:3,pony:3,buns:4,braid:4},hat:{none:0,band:0,phones:3,earm:3,sprout:3,beret:4,ribbon:4},clip:{none:0,heart:0,bow:2,star:2,berry:3,clover:3},glasses:{1:2},bear:{1:4},bunny:{1:5}};
+const priceOf = (k, v) => k === 'outfit' ? OUTFITS[v].p : k === 'hair' ? (HAIRS.indexOf(v) < 3 ? 0 : 2) : ((PRICE[k] && PRICE[k][v]) || 0);
 const CW = 48, CH = 76;
 const hx = h => [1,3,5].map(i => parseInt(h.slice(i, i + 2), 16));
 const toHex = a => '#' + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
@@ -284,7 +296,7 @@ function normChar(c){
     eye: isHex(c.eye) ? c.eye.toLowerCase() : EYES[0], shut: !!c.shut,
     outfit: Number.isInteger(c.outfit) && c.outfit >= 0 && c.outfit < OUTFITS.length ? c.outfit : 0,
     hat: inList(c.hat, HATS) ? c.hat : 'none', hatc: isHex(c.hatc) ? c.hatc.toLowerCase() : HATC[0],
-    clip: inList(c.clip, CLIPS) ? c.clip : 'heart', glasses: !!c.glasses, bear: !!c.bear
+        clip: inList(c.clip, CLIPS) ? c.clip : 'heart', glasses: !!c.glasses, bear: !!c.bear, bunny: !!c.bunny
   };
 }
 const charCache = {};
@@ -302,7 +314,7 @@ function charSVG(raw){
 
   /* 1. 뒷머리 */
   E(CX, 29, 16.5, 15.5, H);
-  if (c.hs === 'long' || c.hs === 'wavy') {
+    if (c.hs === 'long' || c.hs === 'wavy' || c.hs === 'braid') {
     for (let y = 30; y <= 58; y++) {
       let l = 7, r = 40;
       if (c.hs === 'wavy') { l += Math.round(1.6 * Math.sin(y * .55)); r -= Math.round(1.6 * Math.sin(y * .55 + 1.2)); }
@@ -319,6 +331,11 @@ function charSVG(raw){
     R(8, 30, 39, 44, H); R(7, 45, 40, 46, H);
   } else if (c.hs === 'bun') {
     E(CX, 12, 5.5, 5, H);
+       } else if (c.hs === 'pony') {
+    for (let y = 22; y <= 56; y++) { const x = 38 + Math.round(3 * Math.sin((y - 22) * .12) + (y - 22) * .08), hw = y < 30 ? 3 : 3.4 - (y - 30) * .05; R(Math.round(x - hw), y, Math.round(x + hw), y, H); }
+    R(37, 23, 40, 25, '#f58aa5');
+  } else if (c.hs === 'buns') {
+    E(CX - 12, 12, 5, 4.6, H); E(CX + 12, 12, 5, 4.6, H);
   }
   for (let y = 36; y < CH; y++) for (let x = 0; x < CW; x++) if (g[y][x] === H && x % 5 === 2) g[y][x] = Hd;
 
@@ -343,11 +360,17 @@ function charSVG(raw){
       }
     }
   }
+   if (o.cardi) { R(16, 45, 19, 56, o.cardi); R(28, 45, 31, 56, o.cardi); P(16, 45, null); P(31, 45, null); }
+  if (o.scarf) { R(19, 44, 28, 46, o.scarf); R(20, 47, 22, 52, o.scarf); R(21, 52, 22, 52, darken(o.scarf, .1)); }
+  if (o.shirt) for (let i = 0; i < 3; i++) R(21 + i, 45 + i, 26 - i, 45 + i, o.shirt);
+  if (o.collar) { R(20, 45, 27, 46, o.collar); P(23, 45, S); P(24, 45, S); P(23, 46, S); P(24, 46, S); }
+  if (o.bow) { P(21, 47, o.bow); P(26, 47, o.bow); R(22, 47, 25, 48, o.bow); P(23, 49, o.bow); P(24, 49, o.bow); }
+  MR(12, 46, 15, 54, o.sleeve || o.cardi || o.top); MR(12, 55, 14, 57, S);
+  if (c.hs === 'braid') for (const s of [-1, 1]) for (let y = 44; y <= 64; y++) { const cx = CX + s * 12.5 + (y % 6 < 3 ? 0 : s), col = Math.floor((y - 44) / 3) % 2 ? Hd : H; R(Math.round(cx - 1.5), y, Math.round(cx + 1.5), y, y > 62 ? '#f58aa5' : col); }
   if (o.shirt) for (let i = 0; i < 3; i++) R(21 + i, 45 + i, 26 - i, 45 + i, o.shirt);
   if (o.collar) { R(20, 45, 27, 46, o.collar); P(23, 45, S); P(24, 45, S); P(23, 46, S); P(24, 46, S); }
   if (o.bow) { P(21, 47, o.bow); P(26, 47, o.bow); R(22, 47, 25, 48, o.bow); P(23, 49, o.bow); P(24, 49, o.bow); }
   MR(12, 46, 15, 54, o.sleeve || o.top); MR(12, 55, 14, 57, S);
-
   /* 4. 얼굴 */
   E(CX, 30, 14.5, 13, S);
   const bl = mix(S, '#ff8fa0', .55);
@@ -355,10 +378,10 @@ function charSVG(raw){
   const dark = '#3b2a2c';
   if (c.shut) { M(15, 34, dark); M(16, 33, dark); M(17, 33, dark); M(18, 34, dark); }
   else {
-    for (let x = 14; x <= 18; x++) M(x, 31, dark);
-    for (let y = 32; y <= 34; y++) for (let x = 15; x <= 18; x++) M(x, y, y === 34 ? lighten(c.eye, .35) : c.eye);
-    M(16, 33, '#1f1517'); M(17, 33, '#1f1517'); M(14, 32, dark);
-    M(16, 32, '#ffffff'); M(18, 34, '#ffffff');
+        for (let x = 13; x <= 18; x++) M(x, 30, dark); M(13, 31, dark);
+    for (let y = 31; y <= 35; y++) for (let x = 14; x <= 18; x++) M(x, y, y >= 34 ? lighten(c.eye, .35) : c.eye);
+    M(16, 32, '#1f1517'); M(17, 32, '#1f1517'); M(16, 33, '#1f1517'); M(17, 33, '#1f1517');
+    M(15, 31, '#ffffff'); M(16, 31, '#ffffff'); M(18, 35, '#ffffff');
   }
   const mc = '#c9707a'; P(22, 38, mc); P(23, 39, mc); P(24, 39, mc); P(25, 38, mc);
 
@@ -368,7 +391,7 @@ function charSVG(raw){
     if (c.bang === 'full') v = 29 + (d > 9.5 ? (d - 9.5) * 3.6 : 0) - ((x === 20 || x === 27) ? 1 : 0);
     else if (c.bang === 'part') v = 22 + d * .85 + (d > 10 ? (d - 10) * 3 : 0);
     else v = 18 + d * .5 + (d > 11 ? (d - 11) * 5 : 0);
-    return Math.min(v, (c.hs === 'bob' || c.hs === 'twin') ? 42 : 46);
+        return Math.min(v, ['bob', 'twin', 'pony', 'buns'].includes(c.hs) ? 42 : 46);
   };
   for (let y = 13; y <= 46; y++) for (let x = 6; x <= 41; x++) {
     const dx = (x - CX) / 16.2, dy = (y - 29.5) / 15.2;
@@ -387,11 +410,19 @@ function charSVG(raw){
     R(10, 20, 37, 21, darken(c.hatc, .12)); R(23, 9, 24, 11, darken(c.hatc, .1));
   } else if (c.hat === 'band') {
     for (let t = 8; t <= 172; t += 3) { const r = t * Math.PI / 180, x = CX - 15.8 * Math.cos(r), y = 29.5 - 15.2 * Math.sin(r); P(x, y, c.hatc); P(x, y + 1, c.hatc); P(x + (x < CX ? 1 : -1), y, c.hatc); }
+     } else if (c.hat === 'earm') {
+    for (let t = 8; t <= 172; t += 3) { const r = t * Math.PI / 180, x = CX - 16.5 * Math.cos(r), y = 29 - 16 * Math.sin(r); P(x, y, c.hatc); P(x, y + 1, c.hatc); }
+    for (const cx of [7.5, 39.5]) E(cx, 33, 3.6, 4.4, c.hatc);
+  } else if (c.hat === 'ribbon') {
+    E(CX - 6, 14, 5, 3.4, c.hatc); E(CX + 6, 14, 5, 3.4, c.hatc); R(22, 12, 25, 16, darken(c.hatc, .15));
   } else if (c.hat === 'sprout') {
     R(23, 9, 24, 14, '#5aa04a'); E(19.5, 8, 3.6, 2, '#7bc65f'); E(28, 8, 3.6, 2, '#7bc65f'); P(21, 9, '#5aa04a'); P(26, 9, '#5aa04a');
   }
   if (c.clip === 'heart') { const h = [[1,0,1],[1,1,1],[0,1,0]]; h.forEach((r, j) => r.forEach((v, i) => v && P(13 + i, 21 + j, '#f58aa5'))); }
   else if (c.clip === 'bow') { const h = [[1,0,1],[1,1,1],[1,0,1]]; h.forEach((r, j) => r.forEach((v, i) => v && P(13 + i, 21 + j, '#2c2c34'))); }
+   if (c.clip === 'star') [[1,0],[0,1],[1,1],[2,1],[1,2]].forEach(([i, j]) => P(13 + i, 20 + j, '#ffd84a'));
+  else if (c.clip === 'berry') { E(14, 22, 2.2, 2.6, '#e5384a'); R(13, 19, 15, 19, '#4f9a3f'); P(14, 22, '#ffd0d6'); }
+  else if (c.clip === 'clover') [[0,0],[2,0],[1,1],[0,2],[2,2]].forEach(([i, j]) => P(13 + i, 20 + j, '#4fae5b'));
   if (c.glasses) {
     const gc = '#6b5a50';
     for (const cx of [16.5, 30.5]) for (let y = 28; y <= 39; y++) for (let x = Math.round(cx - 6); x <= Math.round(cx + 6); x++) {
@@ -406,7 +437,12 @@ function charSVG(raw){
     P(39, 55, bd); P(41, 55, bd); P(40, 57, bd); E(40, 62, 1.8, 2.6, lighten(b, .3)); MR(33, 57, 35, 58, S);
     R(35, 58, 37, 59, b);
   }
-
+  /* 8. 토끼인형 */
+   if (c.bunny) {
+    const w = '#ffffff', pk = '#f7b6c2';
+    E(7, 63, 3.6, 3.2, w); E(7, 58, 3.2, 2.8, w); R(5, 52, 6, 56, w); R(8, 52, 9, 56, w); P(5, 54, pk); P(8, 54, pk);
+    P(6, 58, dark); P(8, 58, dark); P(6, 59, pk); P(9, 59, pk);
+  }
   /* 외곽선 */
   const out = g.map(r => r.slice());
   const ol = col => mix(col, '#4b3b42', .55);
@@ -414,11 +450,39 @@ function charSVG(raw){
     const n = at(x - 1, y) || at(x + 1, y) || at(x, y - 1) || at(x, y + 1);
     if (n) out[y][x] = ol(n);
   }
+    const o2 = out.map(r => r.slice());
+  for (let y = 0; y < CH; y++) for (let x = 0; x < CW; x++) if (!out[y][x]) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (out[y + dy] && out[y + dy][x + dx]) o2[y][x] = '#ffffff';
+  o2.forEach((r, y) => out[y] = r);
   const paths = {};
   for (let y = 0; y < CH; y++) { let x = 0; while (x < CW) { const col = out[y][x]; if (!col) { x++; continue; } let x2 = x; while (x2 + 1 < CW && out[y][x2 + 1] === col) x2++; (paths[col] ||= []).push(`M${x} ${y}h${x2 - x + 1}v1h-${x2 - x + 1}z`); x = x2 + 1; } }
   return charCache[key] = `<svg viewBox="0 0 ${CW} ${CH}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" preserveAspectRatio="xMidYMax meet">` +
     Object.entries(paths).map(([col, p]) => `<path fill="${col}" d="${p.join('')}"/>`).join('') + '</svg>';
 }
+ }
+
+/* ================= 픽셀 도토리 ================= */
+const AC_SVG = (() => {
+  const rows = ['.....oooo.....','.....oyyo.....','...oooyyooo...','..oyyyyyyyyo..','.oyhhhhhhyyyo.','.oyyyyyyyyyyo.','oyyyyyyyyyyyyo','oddddddddddddo',
+    '.obbbbbbbssso.','.obbbbbbbssso.','.obbbbbbbssso.','..obbbbbssso..','...obbbssso...','....obbsso....','.....obso.....','......oo......'];
+  const pal = { o:'#4a2c12', y:'#f8bd3a', h:'#fde58f', d:'#c97a1c', b:'#f4a640', s:'#dd7a2a' }, W = 18, Ht = 20;
+  const g = Array.from({ length: Ht }, () => Array(W).fill(null));
+  rows.forEach((r, j) => [...r].forEach((ch, i) => { if (pal[ch]) g[j + 2][i + 2] = pal[ch]; }));
+  const ring = col => { const src = g.map(r => r.slice()); for (let y = 0; y < Ht; y++) for (let x = 0; x < W; x++) if (!src[y][x]) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (src[y + dy] && src[y + dy][x + dx]) g[y][x] = col; };
+  ring('#ffffff'); ring('#b9c0c9');
+  const paths = {};
+  for (let y = 0; y < Ht; y++) for (let x = 0; x < W; x++) if (g[y][x]) (paths[g[y][x]] ||= []).push(`M${x} ${y}h1v1h-1z`);
+  return `<svg viewBox="0 0 ${W} ${Ht}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">` + Object.entries(paths).map(([c, p]) => `<path fill="${c}" d="${p.join('')}"/>`).join('') + '</svg>';
+})();
+function pixelize(root){
+  if (!root) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.nodeValue.includes('🌰') && n.parentNode && !/^(TEXTAREA|SCRIPT|STYLE|OPTION|TITLE)$/.test(n.parentNode.nodeName) ? 1 : 3 });
+  const list = []; while (w.nextNode()) list.push(w.currentNode);
+  list.forEach(n => {
+    const f = document.createDocumentFragment();
+    n.nodeValue.split('🌰').forEach((t, i) => { if (i) { const a = document.createElement('span'); a.className = 'ac'; a.innerHTML = AC_SVG; f.appendChild(a); } if (t) f.appendChild(document.createTextNode(t)); });
+    n.parentNode.replaceChild(f, n);
+  });
+
 
 /* ================= 상태 ================= */
 let me = null, profile = null, record = null, tab = 'home', planDate = todayS(), calMonth = new Date(2026, 10, 1);
@@ -912,15 +976,20 @@ function visit(v){
 /* ================= 프로필 ================= */
 function prof(){
   const c = profile.char, th = profile.theme;
-  const sw = (key, list) => list.map(v => `<span class="sw ${c[key] === v ? 'on' : ''}" data-k="${key}" data-v="${v}" style="background:${v}"></span>`).join('');
-  const op = (key, list) => list.map(([v, n]) => `<button class="btn sm ${c[key] === v ? '' : 'g'}" data-k="${key}" data-v="${v}">${n}</button>`).join(' ');
-  const tg = (key, label) => `<button class="btn sm ${c[key] ? '' : 'g'}" data-k="${key}" data-v="${c[key] ? '0' : '1'}">${label}</button>`;
-  C(`<h3 class="sec hd">프로필 · 내 캐릭터</h3>
+    const owned = (k, v) => !priceOf(k, v) || record.owned.includes(k + ':' + v);
+  const tag = (k, v) => owned(k, v) ? '' : ` 🔒🌰${priceOf(k, v)}`;
+  const sw = (key, list) => list.map(v => `<span class="sw ${c[key] === v ? 'on' : ''}" data-k="${key}" data-v="${v}" style="background:${v}" title="${owned(key, v) ? '' : '도토리 ' + priceOf(key, v) + '개'}">${owned(key, v) ? '' : '🔒'}</span>`).join('');
+  const op = (key, list) => list.map(([v, n]) => `<button class="btn sm ${c[key] === v ? '' : 'g'}" data-k="${key}" data-v="${v}">${n}${tag(key, v)}</button>`).join(' ');
+  const tg = (key, label) => `<button class="btn sm ${c[key] ? '' : 'g'}" data-k="${key}" data-v="${c[key] ? '0' : '1'}">${label}${c[key] ? '' : tag(key, '1')}</button>`;
+  C(`<h3 class="sec hd">프로필 · 내 캐릭터 <span style="color:var(--orange)">🌰 ${record.acorns}</span></h3>
+  <p style="color:#888;margin:0 0 6px">🔒는 도토리로 살 수 있어요. 한 번 사면 계속 쓸 수 있어요.</p>
   <div class="two"><div class="box" style="text-align:center;background:linear-gradient(#e8f0f6,#f8f1ea)"><div style="width:150px;margin:auto">${charSVG(c)}</div></div>
   <div><div class="lbl" style="margin-top:0">피부</div>${sw('skin', SKINS)}<div class="lbl">머리색</div>${sw('hair', HAIRS)}
    <div class="lbl">머리모양</div><div class="opts">${op('hs', HAIRSTYLES)}</div><div class="lbl">앞머리</div><div class="opts">${op('bang', BANGS)}</div>
    <div class="lbl">눈</div>${sw('eye', EYES)} <span class="opts" style="display:inline-flex">${tg('shut', c.shut ? '감은 눈' : '뜬 눈')}</span></div></div>
-  <div class="lbl">옷</div><div class="outf">${OUTFITS.map((o, i) => `<div class="${c.outfit === i ? 'on' : ''}" data-k="outfit" data-v="${i}" title="${o.n}">${charSVG({ ...c, outfit: i })}</div>`).join('')}</div>
+  <div class="lbl">옷</div><div class="outf">${OUTFITS.map((o, i) => `<div class="${c.outfit === i ? 'on' : ''}" data-k="outfit" data-v="${i}" title="${o.n}">${charSVG({ ...c, outfit: i, bear: false, bunny: false })}<span class="pc">${o.n}<br>${owned('outfit', i) ? '✓' : '🌰' + o.p}</span></div>`).join('')}</div>
+  <div class="two"><div><div class="lbl">모자</div><div class="opts">${op('hat', HATS)}</div><div class="lbl">모자/머리띠 색</div>${sw('hatc', HATC)}</div>
+  <div><div class="lbl">머리핀</div><div class="opts">${op('clip', CLIPS)}</div><div class="lbl">소품</div><div class="opts">${tg('glasses', c.glasses ? '안경 ON' : '안경')} ${tg('bear', c.bear ? '곰인형 ON' : '곰인형')} ${tg('bunny', c.bunny ? '토끼인형 ON' : '토끼인형')}</div></div></div>
   <div class="two"><div><div class="lbl">모자</div><div class="opts">${op('hat', HATS)}</div><div class="lbl">모자/머리띠 색</div>${sw('hatc', HATC)}</div>
   <div><div class="lbl">머리핀</div><div class="opts">${op('clip', CLIPS)}</div><div class="lbl">소품</div><div class="opts">${tg('glasses', c.glasses ? '안경 ON' : '안경 OFF')} ${tg('bear', c.bear ? '곰인형 ON' : '곰인형 OFF')}</div></div></div>
   <h3 class="sec hd" style="margin-top:16px">페이지 색 꾸미기</h3>
@@ -938,11 +1007,19 @@ function prof(){
     if (tp) { profile.theme = normTheme({ ...profile.theme, ...THEMES[+tp.dataset.tp][1] }); applyTheme(profile.theme); saveProfile(); prof(); renderShell(); return; }
     if (pt) { profile.theme.pat = pt.dataset.tpat; applyTheme(profile.theme); saveProfile(); prof(); return; }
     const t = e.target.closest('[data-k]'); if (!t) return; const k = t.dataset.k, v = t.dataset.v;
-    c[k] = k === 'outfit' ? +v : (k === 'glasses' || k === 'bear' || k === 'shut') ? v === '1' : v;
+    const pr = priceOf(k, v), key = k + ':' + v;
+    if (pr && !record.owned.includes(key)) {
+      if (record.acorns < pr) return toast('도토리가 부족해요 🌰');
+      if (!confirm(`도토리 ${pr}개로 살까요?`)) return;
+      record.acorns -= pr; record.owned.push(key); saveRecord(); toast('구입했어요!');
+    }
+    c[k] = k === 'outfit' ? +v : (k === 'glasses' || k === 'bear' || k === 'bunny' || k === 'shut') ? v === '1' : v;
     profile.char = normChar(c); saveProfile(); prof(); renderShell();
   };
   $('#ps').onclick = () => { profile.name = $('#pn').value.trim() || me; profile.msg = $('#pm').value.trim(); saveProfile(); renderShell(); toast('저장했어요 ✨'); };
 }
+ pixelize(document.body);
+new MutationObserver(ms => ms.forEach(m => { m.addedNodes.forEach(n => pixelize(n.nodeType === 1 ? n : n.parentNode)); if (m.type === 'characterData') pixelize(m.target.parentNode); })).observe(document.body, { childList: true, subtree: true, characterData: true });
 </script>
 </body>
 </html>
