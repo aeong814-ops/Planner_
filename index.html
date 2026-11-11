@@ -367,10 +367,6 @@ function charSVG(raw){
   if (o.bow) { P(21, 47, o.bow); P(26, 47, o.bow); R(22, 47, 25, 48, o.bow); P(23, 49, o.bow); P(24, 49, o.bow); }
   MR(12, 46, 15, 54, o.sleeve || o.cardi || o.top); MR(12, 55, 14, 57, S);
   if (c.hs === 'braid') for (const s of [-1, 1]) for (let y = 44; y <= 64; y++) { const cx = CX + s * 12.5 + (y % 6 < 3 ? 0 : s), col = Math.floor((y - 44) / 3) % 2 ? Hd : H; R(Math.round(cx - 1.5), y, Math.round(cx + 1.5), y, y > 62 ? '#f58aa5' : col); }
-  if (o.shirt) for (let i = 0; i < 3; i++) R(21 + i, 45 + i, 26 - i, 45 + i, o.shirt);
-  if (o.collar) { R(20, 45, 27, 46, o.collar); P(23, 45, S); P(24, 45, S); P(23, 46, S); P(24, 46, S); }
-  if (o.bow) { P(21, 47, o.bow); P(26, 47, o.bow); R(22, 47, 25, 48, o.bow); P(23, 49, o.bow); P(24, 49, o.bow); }
-  MR(12, 46, 15, 54, o.sleeve || o.top); MR(12, 55, 14, 57, S);
   /* 4. 얼굴 */
   E(CX, 30, 14.5, 13, S);
   const bl = mix(S, '#ff8fa0', .55);
@@ -458,8 +454,6 @@ function charSVG(raw){
   return charCache[key] = `<svg viewBox="0 0 ${CW} ${CH}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" preserveAspectRatio="xMidYMax meet">` +
     Object.entries(paths).map(([col, p]) => `<path fill="${col}" d="${p.join('')}"/>`).join('') + '</svg>';
 }
- }
-
 /* ================= 픽셀 도토리 ================= */
 const AC_SVG = (() => {
   const rows = ['.....oooo.....','.....oyyo.....','...oooyyooo...','..oyyyyyyyyo..','.oyhhhhhhyyyo.','.oyyyyyyyyyyo.','oyyyyyyyyyyyyo','oddddddddddddo',
@@ -482,7 +476,7 @@ function pixelize(root){
     n.nodeValue.split('🌰').forEach((t, i) => { if (i) { const a = document.createElement('span'); a.className = 'ac'; a.innerHTML = AC_SVG; f.appendChild(a); } if (t) f.appendChild(document.createTextNode(t)); });
     n.parentNode.replaceChild(f, n);
   });
-
+}
 
 /* ================= 상태 ================= */
 let me = null, profile = null, record = null, tab = 'home', planDate = todayS(), calMonth = new Date(2026, 10, 1);
@@ -990,8 +984,6 @@ function prof(){
   <div class="lbl">옷</div><div class="outf">${OUTFITS.map((o, i) => `<div class="${c.outfit === i ? 'on' : ''}" data-k="outfit" data-v="${i}" title="${o.n}">${charSVG({ ...c, outfit: i, bear: false, bunny: false })}<span class="pc">${o.n}<br>${owned('outfit', i) ? '✓' : '🌰' + o.p}</span></div>`).join('')}</div>
   <div class="two"><div><div class="lbl">모자</div><div class="opts">${op('hat', HATS)}</div><div class="lbl">모자/머리띠 색</div>${sw('hatc', HATC)}</div>
   <div><div class="lbl">머리핀</div><div class="opts">${op('clip', CLIPS)}</div><div class="lbl">소품</div><div class="opts">${tg('glasses', c.glasses ? '안경 ON' : '안경')} ${tg('bear', c.bear ? '곰인형 ON' : '곰인형')} ${tg('bunny', c.bunny ? '토끼인형 ON' : '토끼인형')}</div></div></div>
-  <div class="two"><div><div class="lbl">모자</div><div class="opts">${op('hat', HATS)}</div><div class="lbl">모자/머리띠 색</div>${sw('hatc', HATC)}</div>
-  <div><div class="lbl">머리핀</div><div class="opts">${op('clip', CLIPS)}</div><div class="lbl">소품</div><div class="opts">${tg('glasses', c.glasses ? '안경 ON' : '안경 OFF')} ${tg('bear', c.bear ? '곰인형 ON' : '곰인형 OFF')}</div></div></div>
   <h3 class="sec hd" style="margin-top:16px">페이지 색 꾸미기</h3>
   <div class="lbl" style="margin-top:0">추천 색 조합</div>
   <div class="opts">${THEMES.map(([n, t], i) => `<button class="btn sm g" data-tp="${i}" style="border-color:${t.accent}"><span style="display:inline-block;width:12px;height:12px;background:${t.cover};border:1px solid ${t.accent};vertical-align:-1px"></span> ${n}</button>`).join(' ')}</div>
