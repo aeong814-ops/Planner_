@@ -268,7 +268,7 @@ const MOODS = ['😊 기분 좋음','📚 열공 중','😴 졸려요','😭 시
 const SKINS = ['#ffe6d5','#fbd5bd','#eebb98','#c98f66'];
 const HAIRS = ['#2a2224','#4a342e','#7a5444','#a9805f','#e6cf9f','#f5ecd2','#e58b4a','#c0272d','#d9899f','#a8d8ee','#c4b5ee','#2b3a6b'];
 const EYES = ['#3a2a2a','#7a5a3a','#5f8a4a','#6f7f95'];
-const HAIRSTYLES = [['long','생머리'],['wavy','웨이브'],['bob','단발'],['twin','양갈래'],['bun','똥머리'],['pony','포니테일'],['buns','양쪽 똥머리'],['braid','땋은 머리']];
+const HAIRSTYLES = [['long','생머리'],['wavy','웨이브'],['bob','단발'],['twin','양갈래'],['bun','똥머리'],['pony','포니테일'],['buns','양쪽 똥머리'],['braid','땋은 머리'],['short','짧은머리(남)'],['spiky','삐죽머리(남)'],['curly','곱슬머리(남)']];
 const BANGS = [['full','앞머리'],['part','가르마'],['none','넘김']];
 const HATS = [['none','없음'],['band','머리띠'],['phones','헤드폰'],['earm','귀마개'],['beret','베레모'],['ribbon','리본'],['sprout','새싹']];
 const HATC = ['#f7f0dc','#2b2a2e','#c2262e','#b7a8e6','#f2a9bd','#ffffff'];
@@ -288,10 +288,15 @@ const OUTFITS = [
  {n:'목도리 코트',p:4,k:'skirt',top:'#e9dcc3',cardi:'#a98a62',scarf:'#f4e8d2',skirt:'#f4e8d2',sock:'#ffffff',shoe:'#2b2a2e'},
  {n:'회색 맨투맨',p:3,k:'dress',top:'#b8bcc4',skirt:'#b8bcc4',sock:'#ffffff',shoe:'#2b2a2e'},
  {n:'민트 카디건',p:4,k:'pants',top:'#ffffff',cardi:'#a7dcc6',pants:'#f3efe6',shoe:'#ffffff'},
- {n:'레드 후드',p:5,k:'pants',top:'#ffffff',cardi:'#c9302f',pants:'#c9302f',shoe:'#ffffff'}
+ {n:'레드 후드',p:5,k:'pants',top:'#ffffff',cardi:'#c9302f',pants:'#c9302f',shoe:'#ffffff'},
+  {n:'정장',p:5,k:'pants',top:'#ffffff',cardi:'#2b2a30',pants:'#2b2a30',shirt:'#ffffff',bow:'#c9302f',shoe:'#1f1f22'},
+ {n:'후드티 청바지',p:3,k:'pants',top:'#8fb0d4',pants:'#6d8fb8',shoe:'#ffffff'},
+ {n:'흰 티 슬랙스',p:0,k:'pants',top:'#ffffff',pants:'#3d3f4a',shoe:'#2b2a2e'},
+ {n:'남자 교복',p:4,k:'pants',top:'#ffffff',cardi:'#2b3159',pants:'#2b3159',shirt:'#ffffff',bow:'#c9302f',shoe:'#2b2a2e'},
+ {n:'카키 가디건',p:4,k:'pants',top:'#f4e8d2',cardi:'#8a9a5b',pants:'#d9c9a8',shoe:'#8c6b4a'}
 ];
 /* 가격: 0 = 기본 무료, 나머지는 도토리로 구입 */
-const PRICE = {hs:{long:0,wavy:0,bob:0,twin:2,bun:3,pony:3,buns:4,braid:4},hat:{none:0,band:0,phones:3,earm:3,sprout:3,beret:4,ribbon:4},clip:{none:0,heart:0,bow:2,star:2,berry:3,clover:3},glasses:{1:2},bear:{1:4},bunny:{1:5}};
+const PRICE = {hs:{short:0,spiky:2,curly:3,long:0,,wavy:0,bob:0,twin:2,bun:3,pony:3,buns:4,braid:4},hat:{none:0,band:0,phones:3,earm:3,sprout:3,beret:4,ribbon:4},clip:{none:0,heart:0,bow:2,star:2,berry:3,clover:3},glasses:{1:2},bear:{1:4},bunny:{1:5}};
 const priceOf = (k, v) => k === 'outfit' ? OUTFITS[v].p : k === 'hair' ? (HAIRS.indexOf(v) < 3 ? 0 : 2) : ((PRICE[k] && PRICE[k][v]) || 0);
 const CW = 48, CH = 76;
 const hx = h => [1,3,5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -348,6 +353,10 @@ function charSVG(raw){
     R(37, 23, 40, 25, '#f58aa5');
   } else if (c.hs === 'buns') {
     E(CX - 12, 12, 5, 4.6, H); E(CX + 12, 12, 5, 4.6, H);
+       } else if (c.hs === 'spiky') {
+    [[11, 13], [15, 10], [19, 8], [22, 6]].forEach(([x, y]) => MR(x - 1, y, x, 15, H)); R(23, 5, 24, 15, H);
+  } else if (c.hs === 'curly') {
+    for (let t = 190; t <= 350; t += 18) { const r = t * Math.PI / 180; E(CX + 16.5 * Math.cos(r), 29 + 15.5 * Math.sin(r), 3, 3, H); }
   }
   for (let y = 36; y < CH; y++) for (let x = 0; x < CW; x++) if (g[y][x] === H && x % 5 === 2) g[y][x] = Hd;
 
@@ -381,7 +390,7 @@ function charSVG(raw){
   if (c.hs === 'braid') for (const s of [-1, 1]) for (let y = 44; y <= 64; y++) { const cx = CX + s * 12.5 + (y % 6 < 3 ? 0 : s), col = Math.floor((y - 44) / 3) % 2 ? Hd : H; R(Math.round(cx - 1.5), y, Math.round(cx + 1.5), y, y > 62 ? '#f58aa5' : col); }
   /* 4. 얼굴 */
   E(CX, 30, 14.5, 13, S);
-  const bl = mix(S, '#ff8fa0', .55);
+  const bl = mix(S, '#ff8fa0', ['short', 'spiky', 'curly'].includes(c.hs) ? .25 : .55);
   MR(12, 36, 15, 37, bl);
   const dark = '#3b2a2c';
   if (c.shut) { M(15, 34, dark); M(16, 33, dark); M(17, 33, dark); M(18, 34, dark); }
@@ -399,7 +408,7 @@ function charSVG(raw){
     if (c.bang === 'full') v = 29 + (d > 9.5 ? (d - 9.5) * 3.6 : 0) - ((x === 20 || x === 27) ? 1 : 0);
     else if (c.bang === 'part') v = 22 + d * .85 + (d > 10 ? (d - 10) * 3 : 0);
     else v = 18 + d * .5 + (d > 11 ? (d - 11) * 5 : 0);
-        return Math.min(v, ['bob', 'twin', 'pony', 'buns'].includes(c.hs) ? 42 : 46);
+            return Math.min(v, ({ short: 33, spiky: 33, curly: 34 })[c.hs] || (['bob', 'twin', 'pony', 'buns'].includes(c.hs) ? 42 : 46));
   };
   for (let y = 13; y <= 46; y++) for (let x = 6; x <= 41; x++) {
     const dx = (x - CX) / 16.2, dy = (y - 29.5) / 15.2;
@@ -811,8 +820,9 @@ function drawVisitors(list){
   room.querySelectorAll('.vchar').forEach(e => e.remove());
   list.forEach(v => {
     const [x, y] = slot(v.id), d = document.createElement('div');
-    d.className = 'vchar'; d.style.cssText = `left:${x}%;top:${y}%;z-index:${Math.round(y)}`;
-    d.innerHTML = charSVG(v.char) + `<i class="vn">${esc(v.name)}</i>`;
+    d.className = 'vchar';
+    d.style.cssText = `position:absolute;left:${x}%;top:${y}%;z-index:${Math.round(y)};width:15cqw;transform:translate(-50%,-96%);pointer-events:none`;
+    d.innerHTML = charSVG(v.char).replace('<svg ', '<svg style="width:100%;display:block" ') + `<i class="vn" style="display:block;text-align:center;font-style:normal;font-size:3.4cqw;color:#444;text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 3px #fff;white-space:nowrap;margin-top:-1cqw">${esc(v.name)}</i>`;
     room.appendChild(d);
   });
 }
