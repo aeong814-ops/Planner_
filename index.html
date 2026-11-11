@@ -130,6 +130,8 @@ input.f,textarea.f{width:100%;padding:8px;border:1px solid var(--line);border-ra
 #lb{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:80;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;gap:8px;padding:12px}
 #lb img{max-width:92vw;max-height:78vh;border-radius:10px;background:#fff}
 #yt{position:fixed;width:200px;height:113px;left:-400px;top:0;pointer-events:none}
+#yt.show{left:10px;top:auto;bottom:70px;z-index:90;pointer-events:auto;border:2px solid var(--line);border-radius:8px;overflow:hidden;background:#000}
+
 @media(max-width:860px){
  .book{grid-template-columns:1fr}.title{grid-column:1}.ring{display:none}
  .left{min-height:0}.tabs{flex-direction:row;flex-wrap:wrap;margin:0;order:-1;grid-column:1}
@@ -476,7 +478,7 @@ function loadYT(){
     setTimeout(() => { if (!(window.YT && YT.Player)) { ytApi = null; res(false); } }, 8000);
   });
 }
-function stopBGM(){ bgmToken++; try { ytP && ytP.destroy && ytP.destroy(); } catch(e){} ytP = null; $('#yt').innerHTML = ''; audioEl.pause(); playing = false; updatePlayer(); }
+function stopBGM(){ bgmToken++; $('#yt').classList.remove('show'); try { ytP && ytP.destroy && ytP.destroy(); } catch(e){} ytP = null; $('#yt').innerHTML = ''; audioEl.pause(); playing = false; updatePlayer(); }
 async function startBGM(b){
   stopBGM(); curBGM = b; if (!b || !b.url) { updatePlayer(); return; }
   const tok = bgmToken, id = parseYT(b.url);
@@ -489,15 +491,16 @@ async function startBGM(b){
       events: {
         onReady: e => { if (tok === bgmToken) e.target.playVideo(); },
         onError: e => { if (tok !== bgmToken) return; toast(YT_ERR[e.data] || '재생할 수 없는 영상이에요'); playing = false; updatePlayer(); },
-        onStateChange: e => { if (tok === bgmToken && e.data === 1) { playing = true; updatePlayer(); } }
+        onStateChange: e => { if (tok === bgmToken && e.data === 1) { playing = true; $('#yt').classList.remove('show'); updatePlayer(); } }
       } });
-    setTimeout(() => { try { if (tok === bgmToken && ytP && ytP.getPlayerState && ![1, 3].includes(ytP.getPlayerState())) { toast('브라우저가 자동재생을 막았어요. ▶를 눌러 주세요'); playing = false; updatePlayer(); } } catch(e){} }, 4500);
+    setTimeout(() => { try { if (tok === bgmToken && ytP && ytP.getPlayerState && ![1, 3].includes(ytP.getPlayerState())) { $('#yt').classList.add('show'); toast('왼쪽 아래 영상의 ▶를 직접 눌러 주세요'); updatePlayer(); } } catch(e){} }, 4500);
     return;
   }
   if (/^https?:\/\//i.test(b.url)) { audioEl.src = b.url; audioEl.play().catch(() => { toast('재생할 수 없는 링크예요 (mp3 파일 주소인지 확인해 주세요)'); playing = false; updatePlayer(); }); }
   else { toast('재생할 수 없는 링크예요'); return; }
   playing = true; updatePlayer();
 }
+setTimeout(loadYT, 1500);
 function updatePlayer(){
   const t = curBGM?.title || (curBGM?.url ? '배경음악' : '노래 없음');
   document.querySelectorAll('.ptitle').forEach(e => e.textContent = t);
