@@ -1121,7 +1121,7 @@ function play(){
   C(`<h3 class="sec hd">놀이터</h3>
   <div class="box"><div class="hd bl">🌊 파도타기</div><p style="color:#888;line-height:1.6">친구의 미니홈피에 랜덤으로 놀러 가요. 친구 방에서 다시 누르면 친구의 친구 방으로 이어져요.</p><button class="btn o" id="pw">파도타기 출발!</button></div>
   <div class="box" style="margin-top:12px"><div class="hd bl">🎫 도토리 복권 <small>하루 한 번</small></div>${lot}</div>
-  <div class="box" style="margin-top:12px"><div class="hd bl">💬 감성 문구 자판기</div><div id="qt" style="padding:14px 6px;text-align:center;line-height:1.7;min-height:50px">버튼을 눌러 보세요</div><div class="row"><button class="btn o" id="qb">문구 뽑기</button><button class="btn g" id="qs">내 한마디로 저장</button></div></ 
+  <div class="box" style="margin-top:12px"><div class="hd bl">💬 감성 문구 자판기</div><div id="qt" style="padding:14px 6px;text-align:center;line-height:1.7;min-height:50px">버튼을 눌러 보세요</div><div class="row"><button class="btn o" id="qb">문구 뽑기</button><button class="btn g" id="qs">내 한마디로 저장</button></div></div>`);
   $('#pw').onclick = wave; giftUI();
   let q = '';
   $('#qb').onclick = () => { q = QUOTES[Math.floor(Math.random() * QUOTES.length)]; $('#qt').textContent = q; };
