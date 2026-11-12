@@ -689,6 +689,7 @@ function renderShell(){
     <div class="srow"><span>오늘 공부</span><b>${ah0}h ${am0}m</b></div>
     <div class="srow"><span>연속 인증</span><b>${streak}일</b></div>
     <div class="srow"><span>일촌</span><b>${record.friends.length}명</b></div>
+    <div class="row"><button class="btn sm" onclick="go('juke')">🎧 ${esc(profile.plName || '내 플레이리스트')} (${(profile.pl || []).length})</button></div>
     <div class="row"><button class="btn g sm" onclick="logout()">로그아웃</button></div>`}`;
   const ms = $('#moodSel'); if (ms) ms.onchange = () => { profile.mood = ms.value; saveProfile(); };
   const si = $('#stIn'); if (si) si.onchange = () => { profile.status = si.value.trim(); saveProfile(); toast('상태메시지 저장 ✨'); };
@@ -1087,7 +1088,8 @@ function juke(){
   <p style="color:#888;line-height:1.6">유튜브 링크 또는 mp3 주소를 붙여넣으면 내 미니홈피 배경음악이 돼요. 친구가 놀러 오면 이 노래를 들을 수 있어요.<br>⚠️ 공식 뮤직비디오는 '퍼가기'가 막힌 경우가 많아요. 안 나오면 가사 영상이나 오디오 영상 같은 다른 업로드 링크를 써 보세요.</p>
   <input class="f" id="bt" placeholder="노래 제목" value="${esc(profile.bgm.title)}"><input class="f" id="bu" placeholder="https://www.youtube.com/watch?v=..." value="${esc(profile.bgm.url)}">
   <div class="row"><button class="btn" id="bs">저장하고 재생</button><button class="btn g" id="bd">노래 지우기</button></div>
-  <h3 class="sec hd" style="margin-top:16px">내 플레이리스트 (${pl.length}곡)</h3>
+    <div class="row" style="margin-top:16px"><input class="f" id="pn" maxlength="20" placeholder="플레이리스트 이름" value="${esc(profile.plName || '내 플레이리스트')}"><button class="btn sm" id="pns">이름 저장</button></div>
+  <div style="color:#888;margin:4px 0">${pl.length}곡</div>
   <div id="pl">${pl.map((s, i) => `<div class="fl" style="padding:4px 0"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🎵 ${esc(s.title || s.url)}</span><button class="btn sm" data-pp="${i}">▶</button><button class="btn g sm" data-pd="${i}">×</button></div>`).join('') || '<span style="color:#aaa">노래를 저장하면 여기에 차곡차곡 쌓여요</span>'}</div>`);
   $('#bs').onclick = () => {
     const s = { title: $('#bt').value.trim(), url: $('#bu').value.trim() };
@@ -1096,6 +1098,7 @@ function juke(){
     saveProfile(); startBGM(s); toast('저장했어요 🎵'); juke();
   };
   $('#bd').onclick = () => { profile.bgm = { title: '', url: '' }; saveProfile(); stopBGM(); curBGM = profile.bgm; updatePlayer(); juke(); };
+   $('#pns').onclick = () => { profile.plName = $('#pn').value.trim().slice(0, 20) || '내 플레이리스트'; saveProfile(); renderShell(); juke(); toast('이름을 바꿨어요'); };
   document.querySelectorAll('[data-pp]').forEach(b => b.onclick = () => { profile.bgm = pl[b.dataset.pp]; saveProfile(); startBGM(profile.bgm); juke(); });
   document.querySelectorAll('[data-pd]').forEach(b => b.onclick = () => { pl.splice(b.dataset.pd, 1); saveProfile(); juke(); });
 }
