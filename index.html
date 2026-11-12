@@ -1106,6 +1106,7 @@ function startPresence(){
     clearInterval(onT);
   const tick = async () => {
     if (!me || !record) return;
+       claimGifts();
     try { await DB.set('pres', me, { t: Date.now() }); } catch (e) {}
     for (const f of record.friends) {
       try { const d = await DB.get('pres', f), on = !!d && Date.now() - d.t < 75000; if (on && !online[f]) popup(`💌 ${f}님이 접속했어요!`); online[f] = on; } catch (e) {}
@@ -1120,8 +1121,8 @@ function play(){
   C(`<h3 class="sec hd">놀이터</h3>
   <div class="box"><div class="hd bl">🌊 파도타기</div><p style="color:#888;line-height:1.6">친구의 미니홈피에 랜덤으로 놀러 가요. 친구 방에서 다시 누르면 친구의 친구 방으로 이어져요.</p><button class="btn o" id="pw">파도타기 출발!</button></div>
   <div class="box" style="margin-top:12px"><div class="hd bl">🎫 도토리 복권 <small>하루 한 번</small></div>${lot}</div>
-  <div class="box" style="margin-top:12px"><div class="hd bl">💬 감성 문구 자판기</div><div id="qt" style="padding:14px 6px;text-align:center;line-height:1.7;min-height:50px">버튼을 눌러 보세요</div><div class="row"><button class="btn o" id="qb">문구 뽑기</button><button class="btn g" id="qs">내 한마디로 저장</button></div></div>`);
-  $('#pw').onclick = wave;
+  <div class="box" style="margin-top:12px"><div class="hd bl">💬 감성 문구 자판기</div><div id="qt" style="padding:14px 6px;text-align:center;line-height:1.7;min-height:50px">버튼을 눌러 보세요</div><div class="row"><button class="btn o" id="qb">문구 뽑기</button><button class="btn g" id="qs">내 한마디로 저장</button></div></ 
+  $('#pw').onclick = wave; giftUI();
   let q = '';
   $('#qb').onclick = () => { q = QUOTES[Math.floor(Math.random() * QUOTES.length)]; $('#qt').textContent = q; };
   $('#qs').onclick = () => { if (!q) return toast('먼저 문구를 뽑아 보세요'); profile.msg = q; saveProfile(); renderShell(); toast('내 한마디로 저장했어요 ☆'); };
@@ -1134,6 +1135,36 @@ function play(){
       if (c / (d.length / 16) > .45 && !record.lotto.claimed) { record.lotto.claimed = true; record.acorns += record.lotto.prize; saveRecord(); refreshSide(); cv.remove(); $('#lm').textContent = record.lotto.prize ? `🌰 ${record.lotto.prize}개 획득!` : '아쉽지만 꽝! 내일 또 도전'; toast(record.lotto.prize ? `도토리 ${record.lotto.prize}개 당첨! 🌰` : '꽝이에요 😢'); const a = document.querySelector('.left .stat b'); if (a) a.textContent = '🌰 ' + record.acorns; } };
     cv.onpointerdown = e => { down = true; cv.setPointerCapture(e.pointerId); scratch(e); }; cv.onpointermove = e => { if (down) scratch(e); }; cv.onpointerup = () => { down = false; };
   }
+}
+/* ================= 도토리 선물 ================= */
+const GIFT_MAX = 10; /* 한 번에, 그리고 하루에 보낼 수 있는 최대 개수 */
+async function claimGifts(){
+  try {
+    const ids = await DB.list('gift', me + '/'); if (!ids.length) return;
+    let sum = 0; const who = [];
+    for (const id of ids) { const g = await DB.get('gift', id); await DB.del('gift', id); if (g && g.n >= 1 && g.n <= GIFT_MAX) { sum += g.n; who.push(g.from); } }
+    if (sum) { record.acorns += sum; saveRecord(); refreshSide(); popup(`🎁 ${[...new Set(who)].join(', ')}님이 도토리 ${sum}개를 선물했어요!`); }
+  } catch (e) {}
+}
+async function sendGift(to, n){
+  n = Math.floor(+n);
+  const gd = record.giftDay && record.giftDay.d === todayS() ? record.giftDay : { d: todayS(), n: 0 };
+  if (!to) return toast('받을 친구를 골라 주세요');
+  if (!(n >= 1 && n <= GIFT_MAX)) return toast(`1~${GIFT_MAX}개까지 보낼 수 있어요`);
+  if (record.acorns < n) return toast('도토리가 부족해요');
+  if (gd.n + n > GIFT_MAX) return toast(`하루에 ${GIFT_MAX}개까지만 보낼 수 있어요 (오늘 남은 ${GIFT_MAX - gd.n}개)`);
+  try {
+    await DB.set('gift', `${to}/${Date.now()}_${me}`, { from: me, n, ts: Date.now() });
+    record.acorns -= n; gd.n += n; record.giftDay = gd; saveRecord(); refreshSide(); toast(`${to}님께 도토리 ${n}개 선물! 🎁`); giftUI();
+  } catch (e) { toast('연결 오류'); }
+}
+function giftUI(){
+  const old = $('#giftBox'); if (old) old.remove();
+  const gd = record.giftDay && record.giftDay.d === todayS() ? record.giftDay : { n: 0 };
+  $('#content').insertAdjacentHTML('beforeend', `<div class="box" id="giftBox" style="margin-top:12px"><div class="hd bl">🎁 도토리 선물</div>
+    <p style="color:#888;line-height:1.6">친구에게 내 도토리를 나눠 줘요. 오늘 남은 선물 가능 개수: <b>${GIFT_MAX - gd.n}</b>개</p>
+    ${record.friends.length ? `<div class="row"><select class="f" id="gTo" style="margin:0">${record.friends.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('')}</select><input class="f" id="gN" type="number" min="1" max="${GIFT_MAX}" value="1" style="margin:0;flex:0 0 70px"><button class="btn o" id="gGo" style="flex:0 0 80px">보내기</button></div>` : '<span style="color:#aaa">먼저 친구를 추가해 보세요</span>'}</div>`);
+  const b = $('#gGo'); if (b) b.onclick = () => sendGift($('#gTo').value, $('#gN').value);
 }
 
 /* ================= 쥬크박스 ================= */
