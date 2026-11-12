@@ -1179,16 +1179,23 @@ function friends(){
     if (v) { try { const p = Object.assign(defProfile(v.dataset.v), await DB.get('profile', v.dataset.v)); p.char = normChar(p.char); go('visit', { id: v.dataset.v, profile: p }); } catch (er) { toast('방을 불러오지 못했어요'); } }
   };
 }
+ function visitPL(p){
+  const l = Array.isArray(p.pl) ? p.pl : [], nm = esc(p.plName || '플레이리스트');
+  if (!Array.isArray(p.fl) || !p.fl.includes(me)) return `<div class="hd bl" style="margin-top:10px">🎧 ${nm}</div><div style="color:#aaa;margin:6px 0">🔒 이 친구가 나를 친구로 추가하면 플레이리스트를 볼 수 있어요</div>`;
+  return `<div class="hd bl" style="margin-top:10px">🎧 ${nm} (${l.length}곡)</div><div style="margin:6px 0">${l.map((s, i) => `<div class="fl"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🎵 ${esc(s.title || s.url)}</span><button class="btn sm" data-vp="${i}">▶</button></div>`).join('') || '<span style="color:#aaa">비어 있어요</span>'}</div>`;
+}
 function visit(v){
   const p = v.profile; p.bgm = p.bgm || { url: '', title: '' }; p.room = Object.assign({ wall: 'mint', floor: 'check', items: [], cx: 50, cy: 70 }, p.room);
   C(`<h3 class="sec hd">${esc(p.name)}님의 방에 놀러 왔어요 🏠</h3>${roomHTML(p, false)}
   <div class="box" style="margin-top:10px"><div class="fl"><span>🎵 ${esc(p.bgm.title || (p.bgm.url ? '배경음악' : '노래 없음'))}</span>${p.bgm.url ? '<button class="btn sm" id="vb">이 노래 듣기</button>' : ''}</div>
   <div style="padding-top:6px">${esc(p.mood || '')} · ${esc(p.msg)}</div></div>
+    ${visitPL(p)}
   <div class="hd bl">${esc(p.name)}님의 다이어리</div><div id="vp" style="margin-top:6px">불러오는 중...</div>
     <div class="hd bl" style="margin-top:12px">${esc(p.name)}님의 방명록</div><div id="gb" style="margin-top:6px"></div>
   <button class="btn g" onclick="go('friends')">← 친구 목록</button>`);
   bindLB($('#content'));
   const b = $('#vb'); if (b) b.onclick = () => startBGM(p.bgm);
+   document.querySelectorAll('[data-vp]').forEach(x => x.onclick = () => startBGM(p.pl[x.dataset.vp]));
    watchRoom(v.id);
    renderGuest(v.id, $('#gb'));
   if (playing && p.bgm.url) startBGM(p.bgm);
