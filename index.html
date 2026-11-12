@@ -202,7 +202,20 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const pad = n => String(n).padStart(2,'0');
 const ds = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const pd = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
-const todayS = () => ds(new Date());
+let timeOff = 0;
+const nowMs = () => Date.now() + timeOff;
+const todayS = () => new Date(nowMs()).toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+async function syncTime(){
+  try {
+    const r = await fetch(location.pathname + '?_t=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+    const h = r.headers.get('Date'), t = h ? new Date(h).getTime() : NaN;
+    if (!isNaN(t)) { timeOff = t - Date.now(); return true; }
+  } catch (e) {}
+  return false;
+}
+const timeReady = syncTime();
+setInterval(syncTime, 60000);
+const ddText = n => n > 0 ? 'D-' + n : n === 0 ? 'D-DAY' : 'D+' + (-n);
 const daysTo = (a, b) => Math.round((pd(b) - pd(a)) / 864e5);
 const examDate = () => (typeof profile !== 'undefined' && profile && profile.dday && /^\d{4}-\d{2}-\d{2}$/.test(profile.dday.date)) ? profile.dday.date : CONFIG.EXAM_DATE;
 const ddTitle = () => (typeof profile !== 'undefined' && profile && profile.dday && profile.dday.title) || '기말고사';
@@ -620,6 +633,7 @@ $('#lpin').onkeydown = e => { if (e.key === 'Enter') auth(false); };
 
 async function enter(id){
   me = id;
+   await timeReady; planDate = todayS();
   profile = Object.assign(defProfile(id), await DB.get('profile', id) || {});
   profile.char = normChar(profile.char); profile.theme = normTheme(profile.theme);
   record = Object.assign(defRecord(), await DB.get('record', id) || {});
@@ -653,13 +667,13 @@ function renderShell(){
   let ah0 = 0, am0 = 0, streak = 0;
   if (pl0) pl0.tasks.forEach(t => { if (t.done) { ah0 += +t.h || 0; am0 += +t.m || 0; } });
   ah0 += Math.floor(am0 / 60); am0 %= 60;
-  if (!visiting) for (let x = new Date(), n = 0; n < 400; n++, x.setDate(x.getDate() - 1)) { const pp = record.plans[ds(x)]; if (pp && pp.tasks.some(t => t.done)) streak++; else if (n > 0) break; }
+  if (!visiting) for (let x = pd(todayS()), n = 0; n < 400; n++, x.setDate(x.getDate() - 1)) { const pp = record.plans[ds(x)]; if (pp && pp.tasks.some(t => t.done)) streak++; else if (n > 0) break; }
   $('#left').innerHTML = `<div class="pic">${charSVG(p.char)}</div>
     <div class="mood"><i>TODAY IS..</i>${visiting ? `<span>${esc(p.mood)}</span>` : `<select id="moodSel">${MOODS.map(m => `<option ${m === p.mood ? 'selected' : ''}>${m}</option>`).join('')}</select>`}</div>
     ${visiting ? (p.status ? `<div class="stmsg">${esc(p.status)}</div>` : '') : `<input class="f" id="stIn" maxlength="30" placeholder="상태메시지를 적어 보세요" value="${esc(p.status || '')}" style="margin:8px 0 0">`}
     <div class="msg">${esc(p.msg)}</div>
     <div class="nm">${esc(p.name)}</div><div class="idl">@${esc(visiting?.id || me)}</div>
-    ${visiting ? `<div class="srow"><span>일촌</span><b>${(p.fl || []).length}명</b></div>` : `<div class="dbig hd"><small style="display:block;font-size:14px">${esc(ddTitle())}</small>${dLabel(untilExam(todayS())) || '끝!'}</div>
+    ${visiting ? `<div class="srow"><span>일촌</span><b>${(p.fl || []).length}명</b></div>` : `<div class="dbig hd"><small style="display:block;font-size:14px">${esc(ddTitle())}</small>${dLabel(untilExam(todayS())) || '끝!'}</div>${(profile.ddays || []).slice(0, 4).map(x => `<div class="srow"><span>${esc(x.title)}</span><b>${ddText(daysTo(todayS(), x.date))}</b></div>`).join('')}
     <div class="stat"><span>도토리</span><b>🌰 ${record.acorns}</b></div>
     <div class="srow"><span>오늘 할 일</span><b>${dn0}/${tk0.length}</b></div><div class="bar"><i style="width:${tk0.length ? Math.round(dn0 / tk0.length * 100) : 0}%"></i></div>
     <div class="srow"><span>오늘 공부</span><b>${ah0}h ${am0}m</b></div>
@@ -846,9 +860,11 @@ function stopWatch(){
 }
  /* ================= 출석체크 / 오늘의 운세 ================= */
 function attStatus(){ const a = (record && record.att) || {}; return { done: a.last === todayS(), streak: a.streak || 0, total: a.total || 0 }; }
-function checkIn(){
+async function checkIn(){
+  if (!(await syncTime())) return toast('서버 시간을 확인하지 못했어요. 인터넷을 확인해 주세요');
   const t = todayS(), a = record.att || { last: '', streak: 0, total: 0 };
   if (a.last === t) return toast('오늘은 이미 출석했어요 ✅');
+  if (a.last && a.last > t) return toast('출석 기록이 이상해요. 내일 다시 눌러 주세요');
   const y = pd(t); y.setDate(y.getDate() - 1);
   a.streak = a.last === ds(y) ? (a.streak || 0) + 1 : 1; a.total = (a.total || 0) + 1; a.last = t;
   const bonus = a.streak % 7 === 0 ? 3 : 0, gain = 1 + bonus;
@@ -996,7 +1012,7 @@ function cal(){
   let cells = '일월화수목금토'.split('').map(x => `<div class="h">${x}</div>`).join('') + '<div></div>'.repeat(first.getDay());
   for (let i = 1; i <= last; i++) {
     const s = `${y}-${pad(m + 1)}-${pad(i)}`, n = untilExam(s), p = record.plans[s], ts = p ? p.tasks.filter(t => t.t.trim()) : [];
-    cells += `<div class="cd ${s === todayS() ? 'today' : ''} ${n === 0 ? 'exam' : ''} ${n < 0 ? 'out' : ''}" data-d="${s}"><span>${i}</span><em>${dLabel(n)}</em>${ts.length ? `<i>${ts.filter(t => t.done).length}/${ts.length}</i>` : ''}</div>`;
+    cells += `<div class="cd ${s === todayS() ? 'today' : ''} ${n === 0 ? 'exam' : ''} ${n < 0 ? 'out' : ''}" data-d="${s}"><span>${i}</span><em>${dLabel(n)}</em>${(profile.ddays || []).filter(x => x.date === s).map(x => `<small style="display:block;color:#e08a3c;font-size:12px">${esc(x.title)}</small>`).join('')}${ts.length ? `<i>${ts.filter(t => t.done).length}/${ts.length}</i>` : ''}</div>`;
   }
   C(`<h3 class="sec hd">기말고사 D-day 달력</h3><div class="dnav"><button class="btn g sm" id="pm">◀</button><b>${y}년 ${m + 1}월</b><button class="btn g sm" id="nm">▶</button></div>
   <div class="cal" id="cg">${cells}</div><p style="color:#888">날짜를 누르면 그날 계획표로 이동해요. 오른쪽 아래 숫자는 완료/전체 할 일이에요. (기준일: ${examDate()})</p>`);
@@ -1177,6 +1193,9 @@ function prof(){
   <div class="lbl" style="margin-top:0">디데이 이름</div><input class="f" id="ddt" maxlength="12" value="${esc(ddTitle())}" placeholder="예: 기말고사, 수능, 여행">
   <div class="lbl">날짜</div><input class="f" id="ddd" type="date" value="${esc(examDate())}">
   <div class="row"><button class="btn" id="dds">디데이 저장</button><button class="btn g" id="ddr">기본값으로</button></div>
+  <div class="lbl">추가 디데이 (최대 10개)</div>
+  <div id="ddl">${(profile.ddays || []).map(x => `<div class="fl"><span>${esc(x.title)} <small>${esc(x.date)} · ${ddText(daysTo(todayS(), x.date))}</small></span><span><button class="btn sm" data-ddmain="${esc(x.id)}">대표로</button> <button class="btn g sm" data-dddel="${esc(x.id)}">삭제</button></span></div>`).join('') || '<span style="color:#aaa">아직 없어요</span>'}</div>
+  <div class="row"><input class="f" id="ddt2" maxlength="12" placeholder="이름 (예: 생일, 여행)" style="margin:0;min-width:0"><input class="f" id="ddd2" type="date" style="margin:0;min-width:0"><button class="btn o" id="dda" style="flex:0 0 64px">추가</button></div>
   <h3 class="sec hd" style="margin-top:16px">페이지 색 꾸미기</h3>
   <div class="lbl" style="margin-top:0">추천 색 조합</div>
   <div class="opts">${THEMES.map(([n, t], i) => `<button class="btn sm g" data-tp="${i}" style="border-color:${t.accent}"><span style="display:inline-block;width:12px;height:12px;background:${t.cover};border:1px solid ${t.accent};vertical-align:-1px"></span> ${n}</button>`).join(' ')}</div>
@@ -1209,6 +1228,24 @@ function prof(){
     saveProfile(); renderShell(); toast('디데이를 바꿨어요 📅');
   };
   $('#ddr').onclick = () => { delete profile.dday; calMonth = new Date(2026, 10, 1); saveProfile(); renderShell(); prof(); toast('기본값으로 돌렸어요'); };
+   $('#dda').onclick = () => {
+    const title = $('#ddt2').value.trim(), date = $('#ddd2').value;
+    if (!title) return toast('이름을 적어 주세요');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return toast('날짜를 골라 주세요');
+    profile.ddays = profile.ddays || [];
+    if (profile.ddays.length >= 10) return toast('최대 10개까지 추가할 수 있어요');
+    profile.ddays.push({ id: rid(), title, date }); saveProfile(); renderShell(); prof(); toast('디데이를 추가했어요 📅');
+  };
+  $('#ddl').onclick = e => {
+    const dm = e.target.closest('[data-ddmain]'), dx = e.target.closest('[data-dddel]'), list = profile.ddays || [];
+    if (dx) { profile.ddays = list.filter(x => x.id !== dx.dataset.dddel); saveProfile(); renderShell(); prof(); }
+    if (dm) {
+      const x = list.find(v => v.id === dm.dataset.ddmain); if (!x) return;
+      const old = profile.dday; profile.ddays = list.filter(v => v !== x);
+      if (old) profile.ddays.push({ id: rid(), title: old.title, date: old.date });
+      profile.dday = { title: x.title, date: x.date }; saveProfile(); renderShell(); prof(); toast('대표 디데이로 바꿨어요');
+    }
+  };
 }
  pixelize(document.body);
 new MutationObserver(ms => ms.forEach(m => { m.addedNodes.forEach(n => pixelize(n.nodeType === 1 ? n : n.parentNode)); if (m.type === 'characterData') pixelize(m.target.parentNode); })).observe(document.body, { childList: true, subtree: true, characterData: true });
