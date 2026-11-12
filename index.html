@@ -660,13 +660,14 @@ function logout(){ stopBGM(); localStorage.removeItem('dt:session'); location.re
 })();
 
 /* ================= 공통 화면 ================= */
-const TABS = [['home','홈'],['diary','계획표'],['cal','달력'],['story','다이어리'],['guest','방명록'],['album','사진첩'],['juke','쥬크박스'],['play','놀이터'],['decor','방꾸미기'],['friends','친구'],['prof','프로필']];
+const TABS = [['home','홈'],['diary','계획표'],['cal','달력'],['story','다이어리'],['guest','방명록'],['album','사진첩'],['juke','쥬크박스'],['note','알림'],
+['play','놀이터'],['decor','방꾸미기'],['friends','친구'],['prof','프로필']];
 function go(t, arg){
    stopWatch();
   if (visiting && t !== 'visit') { visiting = null; if (playing) startBGM(profile.bgm); else { curBGM = profile.bgm; updatePlayer(); } }
   tab = t; if (t === 'visit') visiting = arg;
   window.scrollTo({ top: 0 });
-  renderShell(); ({ home, diary, cal, story, guest, album, juke, play, decor, friends, prof, visit })[t](arg);
+  renderShell(); ({ home, diary, cal, story, guest, album, juke, play, decor, friends, prof, visit, note: notePage })[t](arg);
 }
 function renderShell(){
   const p = visiting?.profile || profile;
@@ -700,6 +701,7 @@ function renderShell(){
 }
 function refreshSide(){
   if (!record) return;
+   noteBadge();
   const pl = record.plans[todayS()], tasks = pl ? pl.tasks.filter(t => t.t.trim()) : [];
   $('#sAcorn').textContent = record.acorns;
   const n = untilExam(todayS()); $('#sD').textContent = dLabel(n) || '종료';
@@ -1108,7 +1110,7 @@ function startPresence(){
     clearInterval(onT);
   const tick = async () => {
     if (!me || !record) return;
-       claimGifts();
+           claimGifts(); claimNotes();
     try { await DB.set('pres', me, { t: Date.now() }); } catch (e) {}
     for (const f of record.friends) {
       try { const d = await DB.get('pres', f), on = !!d && Date.now() - d.t < 75000; if (on && !online[f]) popup(`💌 ${f}님이 접속했어요!`); online[f] = on; } catch (e) {}
@@ -1138,17 +1140,43 @@ function play(){
     cv.onpointerdown = e => { down = true; cv.setPointerCapture(e.pointerId); scratch(e); }; cv.onpointermove = e => { if (down) scratch(e); }; cv.onpointerup = () => { down = false; };
   }
 }
-/* ================= 도토리 선물 ================= */
+/* ================= 도토리 선물 + 알림 ================= */
 const GIFT_MAX = 10; /* 한 번에, 그리고 하루에 보낼 수 있는 최대 개수 */
+let giftPhoto = '';
+const unreadN = () => (record && record.inbox ? record.inbox.filter(x => !x.r).length : 0);
+function noteBadge(){
+  const n = unreadN();
+  document.querySelectorAll('#tabs .tab').forEach(b => { if ((b.getAttribute('onclick') || '').includes("'note'")) b.textContent = '알림' + (n ? ` (${n})` : ''); });
+}
 async function claimGifts(){
   try {
     const ids = await DB.list('gift', me + '/'); if (!ids.length) return;
-    let sum = 0; const who = [];
-    for (const id of ids) { const g = await DB.get('gift', id); await DB.del('gift', id); if (g && g.n >= 1 && g.n <= GIFT_MAX) { sum += g.n; who.push(g.from); } }
-    if (sum) { record.acorns += sum; saveRecord(); refreshSide(); popup(`🎁 ${[...new Set(who)].join(', ')}님이 도토리 ${sum}개를 선물했어요!`); }
+    record.inbox = record.inbox || []; let sum = 0; const who = [];
+    for (const id of ids) {
+      const g = await DB.get('gift', id); await DB.del('gift', id);
+      if (g && g.n >= 1 && g.n <= GIFT_MAX) {
+        sum += g.n; who.push(String(g.from));
+        const it = { t: 'gift', from: String(g.from).slice(0, 20), n: g.n, msg: String(g.msg || '').slice(0, 30), ts: +g.ts || Date.now() };
+        if (safeImg(g.img)) { const k = `${me}/${Date.now()}_${rid()}`; try { await DB.set('gimg', k, { img: g.img }); it.gi = k; } catch (e) {} }
+        record.inbox.unshift(it);
+      }
+    }
+    if (sum) { record.acorns += sum; record.inbox.splice(50).forEach(x => { if (x.gi) DB.del('gimg', x.gi).catch(() => {}); }); saveRecord(); refreshSide(); popup(`🎁 ${[...new Set(who)].join(', ')}님이 도토리 ${sum}개를 선물했어요!`); }
   } catch (e) {}
 }
-async function sendGift(to, n){
+async function claimNotes(){
+  try {
+    const ids = await DB.list('note', me + '/'); if (!ids.length) return;
+    record.inbox = record.inbox || [];
+    for (const id of ids) {
+      const g = await DB.get('note', id); await DB.del('note', id);
+      if (g && g.t === 'friend' && g.from) { record.inbox.unshift({ t: 'friend', from: String(g.from).slice(0, 20), ts: +g.ts || Date.now() }); popup(`👋 ${g.from}님이 일촌 신청을 했어요!`); }
+    }
+    record.inbox.splice(50); saveRecord(); noteBadge();
+  } catch (e) {}
+}
+const sendFriendNote = f => DB.set('note', `${f}/${Date.now()}_${me}`, { t: 'friend', from: me, ts: Date.now() }).catch(() => {});
+async function sendGift(to, n, msg, img){
   n = Math.floor(+n);
   const gd = record.giftDay && record.giftDay.d === todayS() ? record.giftDay : { d: todayS(), n: 0 };
   if (!to) return toast('받을 친구를 골라 주세요');
@@ -1156,17 +1184,41 @@ async function sendGift(to, n){
   if (record.acorns < n) return toast('도토리가 부족해요');
   if (gd.n + n > GIFT_MAX) return toast(`하루에 ${GIFT_MAX}개까지만 보낼 수 있어요 (오늘 남은 ${GIFT_MAX - gd.n}개)`);
   try {
-    await DB.set('gift', `${to}/${Date.now()}_${me}`, { from: me, n, ts: Date.now() });
-    record.acorns -= n; gd.n += n; record.giftDay = gd; saveRecord(); refreshSide(); toast(`${to}님께 도토리 ${n}개 선물! 🎁`); giftUI();
+    await DB.set('gift', `${to}/${Date.now()}_${me}`, { from: me, n, msg: String(msg || '').trim().slice(0, 30), img: safeImg(img), ts: Date.now() });
+    record.acorns -= n; gd.n += n; record.giftDay = gd; saveRecord(); refreshSide(); toast(`${to}님께 도토리 ${n}개 선물! 🎁`); giftPhoto = ''; giftUI();
   } catch (e) { toast('연결 오류'); }
 }
 function giftUI(){
   const old = $('#giftBox'); if (old) old.remove();
   const gd = record.giftDay && record.giftDay.d === todayS() ? record.giftDay : { n: 0 };
   $('#content').insertAdjacentHTML('beforeend', `<div class="box" id="giftBox" style="margin-top:12px"><div class="hd bl">🎁 도토리 선물</div>
-    <p style="color:#888;line-height:1.6">친구에게 내 도토리를 나눠 줘요. 오늘 남은 선물 가능 개수: <b>${GIFT_MAX - gd.n}</b>개</p>
-    ${record.friends.length ? `<div class="row"><select class="f" id="gTo" style="margin:0">${record.friends.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('')}</select><input class="f" id="gN" type="number" min="1" max="${GIFT_MAX}" value="1" style="margin:0;flex:0 0 70px"><button class="btn o" id="gGo" style="flex:0 0 80px">보내기</button></div>` : '<span style="color:#aaa">먼저 친구를 추가해 보세요</span>'}</div>`);
-  const b = $('#gGo'); if (b) b.onclick = () => sendGift($('#gTo').value, $('#gN').value);
+    <p style="color:#888;line-height:1.6">친구에게 내 도토리와 짧은 메시지를 보내요. 받는 친구는 누가 줬는지 알림에서 볼 수 있어요. 오늘 남은 선물 가능 개수: <b>${GIFT_MAX - gd.n}</b>개</p>
+    ${record.friends.length ? `<div class="row"><select class="f" id="gTo" style="margin:0">${record.friends.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('')}</select><input class="f" id="gN" type="number" min="1" max="${GIFT_MAX}" value="1" style="margin:0;flex:0 0 70px"></div>
+    <div class="row"><input class="f" id="gM" maxlength="30" placeholder="응원 메시지 (30자, 비워도 돼요)" style="margin:0"><button class="btn o" id="gGo" style="flex:0 0 80px">보내기</button></div>
+    <div class="row"><button class="btn g sm" id="gPb" style="flex:0 0 auto">📷 사진 첨부</button><input type="file" id="gP" accept="image/*" hidden><span id="gPs" style="flex:1;align-self:center;color:#888"></span></div>` : '<span style="color:#aaa">먼저 친구를 추가해 보세요</span>'}</div>`);
+  const b = $('#gGo'); if (b) b.onclick = () => sendGift($('#gTo').value, $('#gN').value, $('#gM').value, giftPhoto);
+  const pb = $('#gPb'); if (pb) {
+    const st = () => { $('#gPs').textContent = giftPhoto ? '✓ 사진 1장 첨부됨 (다시 누르면 바꿔요)' : ''; }; st();
+    pb.onclick = () => $('#gP').click();
+    $('#gP').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { giftPhoto = await compress(f, 480, .6); st(); } catch (er) { toast('사진을 불러오지 못했어요'); } };
+  }
+}
+function notePage(){
+  record.inbox = record.inbox || [];
+  const L = record.inbox;
+  C(`<h3 class="sec hd">알림 🔔</h3>
+  <div class="row" style="margin-bottom:8px"><button class="btn g sm" id="nc">모두 지우기</button></div>
+  <div id="nl">${L.map(x => `<div class="fl" style="align-items:flex-start;${x.r ? 'opacity:.6' : ''}"><span style="flex:1;line-height:1.6">${x.t === 'gift' ? `🎁 <b>${esc(x.from)}</b>님이 도토리 <b>${x.n}</b>개를 선물했어요!${x.msg ? `<br><span style="color:#888">💌 “${esc(x.msg)}”</span>` : ''}` : `👋 <b>${esc(x.from)}</b>님이 일촌 신청을 했어요`}<br>${x.gi ? `<br><img data-gi="${esc(x.gi)}" style="display:none;max-width:140px;max-height:140px;border-radius:8px;margin-top:4px;cursor:pointer">` : ''}<br><small style="color:#aaa">${esc(ds(new Date(x.ts)))}</small></span>${x.t === 'friend' && !record.friends.includes(x.from) ? `<button class="btn o sm" data-ac="${esc(x.from)}">일촌 맺기</button>` : ''}</div>`).join('') || '<span style="color:#aaa">아직 알림이 없어요</span>'}</div>`);
+  $('#nc').onclick = () => { if (!confirm('알림을 모두 지울까요?')) return; L.forEach(x => { if (x.gi) DB.del('gimg', x.gi).catch(() => {}); }); record.inbox = []; saveRecord(); notePage(); };
+  document.querySelectorAll('#nl img[data-gi]').forEach(im => DB.get('gimg', im.dataset.gi).then(d => { if (d && safeImg(d.img)) { im.src = d.img; im.style.display = 'inline-block'; } }).catch(() => {}));
+  $('#nl').onclick = e => {
+    const im = e.target.closest('img[data-gi]'); if (im && im.src) return lightbox(im.src, '');
+    const b = e.target.closest('[data-ac]'); if (!b) return; const f = b.dataset.ac;
+    if (!record.friends.includes(f)) { record.friends.push(f); syncFriends(); sendFriendNote(f); toast('일촌이 됐어요 💞'); }
+    notePage();
+  };
+  if (L.some(x => !x.r)) { L.forEach(x => { x.r = 1; }); saveRecord(); }
+  noteBadge();
 }
 
 /* ================= 쥬크박스 ================= */
@@ -1260,7 +1312,8 @@ function friends(){
   $('#fa').onclick = async () => {
     const f = $('#fid').value.trim().toLowerCase(); if (!f) return;
     if (f === me) return toast('나 자신은 이미 친구죠 😊'); if (record.friends.includes(f)) return toast('이미 친구예요');
-    try { if (!await DB.get('profile', f)) return toast('그 아이디의 방이 없어요'); record.friends.push(f); syncFriends(); friends(); toast('친구 추가!'); } catch (e) { toast('연결 오류'); }
+    try { if (!await DB.get('profile', f)) return toast('그 아이디의 방이 없어요'); record.friends.push(f); syncFriends(); sendFriendNote(f); friends(); toast('친구 추가!');
+ } catch (e) { toast('연결 오류'); }
   };
   $('#fl').onclick = async e => {
     const v = e.target.closest('[data-v]'), x = e.target.closest('[data-x]');
