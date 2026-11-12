@@ -660,7 +660,7 @@ function logout(){ stopBGM(); localStorage.removeItem('dt:session'); location.re
 })();
 
 /* ================= 공통 화면 ================= */
-const TABS = [['home','홈'],['diary','계획표'],['cal','달력'],['story','다이어리'],['guest','방명록'],['album','사진첩'],['juke','쥬크박스'],['decor','방꾸미기'],['friends','친구'],['prof','프로필']];
+const TABS = [['home','홈'],['diary','계획표'],['cal','달력'],['story','다이어리'],['guest','방명록'],['album','사진첩'],['juke','쥬크박스'],['play','놀이터'],['decor','방꾸미기'],['friends','친구'],['prof','프로필']];
 function go(t, arg){
    stopWatch();
   if (visiting && t !== 'visit') { visiting = null; if (playing) startBGM(profile.bgm); else { curBGM = profile.bgm; updatePlayer(); } }
@@ -1101,9 +1101,9 @@ function wave(){
   if (!c.length) return toast('먼저 친구를 추가해 보세요');
   toast('🌊 파도타는 중...'); goVisit(c[Math.floor(Math.random() * c.length)]);
 }
-let presT = null; const online = {};
+let onT = null; const online = {};
 function startPresence(){
-  clearInterval(presT);
+    clearInterval(onT);
   const tick = async () => {
     if (!me || !record) return;
     try { await DB.set('pres', me, { t: Date.now() }); } catch (e) {}
@@ -1111,7 +1111,7 @@ function startPresence(){
       try { const d = await DB.get('pres', f), on = !!d && Date.now() - d.t < 75000; if (on && !online[f]) popup(`💌 ${f}님이 접속했어요!`); online[f] = on; } catch (e) {}
     }
   };
-  tick(); presT = setInterval(tick, 30000);
+    tick(); onT = setInterval(tick, 30000);
 }
 function play(){
   const td = todayS(), L = record.lotto && record.lotto.d === td ? record.lotto : null;
