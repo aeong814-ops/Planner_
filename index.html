@@ -141,6 +141,8 @@ input.f,textarea.f{width:100%;padding:8px;border:1px solid var(--line);border-ra
 
  .ritem img{width:12cqw;display:block;pointer-events:none}
 .si .e img{width:56px;height:56px;object-fit:contain}
+ #pop{position:fixed;right:14px;top:14px;background:#fff;border:2px solid var(--line);border-radius:10px;padding:8px 12px;z-index:98;box-shadow:0 3px 10px #0003;max-width:240px;display:none}
+.scr{position:relative;width:220px;height:90px;margin:8px auto}.scr canvas{position:absolute;left:0;top:0;width:220px;height:90px;touch-action:none;border-radius:8px}.scr .prize{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;background:#fff7d6;border-radius:8px}
 @media(max-width:860px){
  .book{grid-template-columns:1fr}.title{grid-column:1}.ring{display:none}
  .left{min-height:0}.tabs{flex-direction:row;flex-wrap:wrap;margin:0;order:-1;grid-column:1}
@@ -649,7 +651,7 @@ async function enter(id){
   record = Object.assign(defRecord(), await DB.get('record', id) || {});
   if (JSON.stringify(profile.fl || []) !== JSON.stringify(record.friends)) { profile.fl = record.friends.slice(); saveProfile(); }
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
-  curBGM = profile.bgm; updatePlayer(); go('home');
+   curBGM = profile.bgm; updatePlayer(); go('home'); startPresence();
 }
 function logout(){ stopBGM(); localStorage.removeItem('dt:session'); location.reload(); }
 (async () => {
@@ -664,7 +666,7 @@ function go(t, arg){
   if (visiting && t !== 'visit') { visiting = null; if (playing) startBGM(profile.bgm); else { curBGM = profile.bgm; updatePlayer(); } }
   tab = t; if (t === 'visit') visiting = arg;
   window.scrollTo({ top: 0 });
-  renderShell(); ({ home, diary, cal, story, guest, album, juke, decor, friends, prof, visit })[t](arg);
+  renderShell(); ({ home, diary, cal, story, guest, album, juke, play, decor, friends, prof, visit })[t](arg);
 }
 function renderShell(){
   const p = visiting?.profile || profile;
@@ -1079,6 +1081,60 @@ async function album(){
     $('#ag').onclick = e => { const x = e.target.closest('.ph'); if (x) lightbox(ok[x.dataset.i].img, ok[x.dataset.i].date + ' · ' + ok[x.dataset.i].text); };
   } catch (e) { $('#ag').textContent = '불러오지 못했어요'; }
 }
+/* ================= 놀이터 (파도타기·접속알림·복권·문구) ================= */
+const QUOTES = ['오늘도 도토리 한 알 모았으니 충분히 잘한 하루 🌰','공부하다 지칠 땐 잠깐 하늘 한 번 보기 ☁️','일촌님, 오늘도 수고했어요 ♡','기말고사 D-day, 우리 끝까지 같이 가요 ✨','BGM 켜 놓고 조용히 별 세는 밤 🌙','오늘의 기분은 맑음, 내일은 더 맑음 ☀️','지나간 시간은 도토리처럼 차곡차곡 쌓인다','네 방에 놀러 온 이 순간이 참 좋다 🏠','꾸준함은 가장 예쁜 재능이야 ☆','오늘의 일기장엔 웃음 한 줄 적어 두기 📔','작은 계획 하나가 큰 하루를 만든다','힘들 땐 쉬어가도 돼, 멈춘 게 아니야 🍃','감성은 새벽 1시에 제일 진하다 🌌','다 잘 될 거야, 도토리 걸고 약속 🌰','친구가 있어서 오늘도 든든해요 (｡•ᴗ•｡)','사진첩 속 오늘은 내일의 추억 📷','이어폰 한쪽만 나눠 끼던 그 기분 🎧','조용히 응원하는 중… 비밀이야 🤫','오늘도 도토리처럼 단단하고 귀엽게','시험이 끝나면 제일 먼저 놀러 갈게 🎒','마음에 드는 노래 하나면 하루가 반짝 🎵','오늘도 내 방 불은 켜져 있어요 💡','한 줄 일기, 한 걸음 성장 👣','걱정은 잠깐, 계획은 오래오래','너 덕분에 오늘도 웃었다 ٩(◕‿◕)۶','낙엽 밟는 소리 같은 하루였어 🍂','세상에서 제일 따뜻한 건 일촌의 댓글 💬','조금 느려도 괜찮아, 너만의 속도로 🐢','오늘의 나에게 도토리 한 알 선물 🎁','☆ 별 하나에 공부 하나, 별 둘에 휴식 하나 ☆'];
+const PRIZES = [[0, 20], [1, 35], [2, 25], [3, 12], [5, 6], [10, 2]]; /* [도토리 수, 확률%] */
+const rollPrize = () => { let r = Math.random() * 100; for (const [v, w] of PRIZES) { if ((r -= w) < 0) return v; } return 1; };
+
+function popup(m){
+  let e = $('#pop'); if (!e) { e = document.createElement('div'); e.id = 'pop'; e.onclick = () => { e.style.display = 'none'; }; document.body.appendChild(e); }
+  e.textContent = m; e.style.display = 'block'; clearTimeout(popup._t); popup._t = setTimeout(() => { e.style.display = 'none'; }, 5000);
+}
+async function goVisit(id){
+  try { const d = await DB.get('profile', id); if (!d) return toast('그 친구의 방이 없어요'); const p = Object.assign(defProfile(id), d); p.char = normChar(p.char); go('visit', { id, profile: p }); }
+  catch (e) { toast('방을 불러오지 못했어요'); }
+}
+function wave(){
+  const from = visiting ? (visiting.profile.fl || []) : record.friends;
+  let c = from.filter(x => x !== me && x !== visiting?.id);
+  if (!c.length) c = record.friends.filter(x => x !== visiting?.id);
+  if (!c.length) return toast('먼저 친구를 추가해 보세요');
+  toast('🌊 파도타는 중...'); goVisit(c[Math.floor(Math.random() * c.length)]);
+}
+let presT = null; const online = {};
+function startPresence(){
+  clearInterval(presT);
+  const tick = async () => {
+    if (!me || !record) return;
+    try { await DB.set('pres', me, { t: Date.now() }); } catch (e) {}
+    for (const f of record.friends) {
+      try { const d = await DB.get('pres', f), on = !!d && Date.now() - d.t < 75000; if (on && !online[f]) popup(`💌 ${f}님이 접속했어요!`); online[f] = on; } catch (e) {}
+    }
+  };
+  tick(); presT = setInterval(tick, 30000);
+}
+function play(){
+  const td = todayS(), L = record.lotto && record.lotto.d === td ? record.lotto : null;
+  const lot = !L ? '<p style="color:#888">하루에 한 번, 복권을 받아서 긁어 보세요!</p><button class="btn o" id="lg">복권 받기 🎫</button>'
+    : `<div class="scr"><div class="prize">${L.prize ? '🌰 × ' + L.prize : '꽝 😢'}</div>${L.claimed ? '' : '<canvas id="cv" width="220" height="90"></canvas>'}</div><div id="lm" style="text-align:center;color:#888">${L.claimed ? '오늘 복권은 끝! 내일 또 만나요 🌰' : '손가락으로 문질러서 긁어 보세요'}</div>`;
+  C(`<h3 class="sec hd">놀이터</h3>
+  <div class="box"><div class="hd bl">🌊 파도타기</div><p style="color:#888;line-height:1.6">친구의 미니홈피에 랜덤으로 놀러 가요. 친구 방에서 다시 누르면 친구의 친구 방으로 이어져요.</p><button class="btn o" id="pw">파도타기 출발!</button></div>
+  <div class="box" style="margin-top:12px"><div class="hd bl">🎫 도토리 복권 <small>하루 한 번</small></div>${lot}</div>
+  <div class="box" style="margin-top:12px"><div class="hd bl">💬 감성 문구 자판기</div><div id="qt" style="padding:14px 6px;text-align:center;line-height:1.7;min-height:50px">버튼을 눌러 보세요</div><div class="row"><button class="btn o" id="qb">문구 뽑기</button><button class="btn g" id="qs">내 한마디로 저장</button></div></div>`);
+  $('#pw').onclick = wave;
+  let q = '';
+  $('#qb').onclick = () => { q = QUOTES[Math.floor(Math.random() * QUOTES.length)]; $('#qt').textContent = q; };
+  $('#qs').onclick = () => { if (!q) return toast('먼저 문구를 뽑아 보세요'); profile.msg = q; saveProfile(); renderShell(); toast('내 한마디로 저장했어요 ☆'); };
+  const lg = $('#lg'); if (lg) lg.onclick = () => { record.lotto = { d: td, prize: rollPrize(), claimed: false }; saveRecord(); play(); };
+  const cv = $('#cv'); if (cv) {
+    const x = cv.getContext('2d'); x.fillStyle = '#b8b8b8'; x.fillRect(0, 0, 220, 90); x.fillStyle = '#fff'; x.font = '16px sans-serif'; x.textAlign = 'center'; x.fillText('여기를 긁어요 ✨', 110, 50);
+    let down = false, n = 0;
+    const scratch = e => { const r = cv.getBoundingClientRect(); x.globalCompositeOperation = 'destination-out'; x.beginPath(); x.arc((e.clientX - r.left) * 220 / r.width, (e.clientY - r.top) * 90 / r.height, 14, 0, 7); x.fill();
+      if (++n % 6) return; const d = x.getImageData(0, 0, 220, 90).data; let c = 0; for (let i = 3; i < d.length; i += 16) if (d[i] === 0) c++;
+      if (c / (d.length / 16) > .45 && !record.lotto.claimed) { record.lotto.claimed = true; record.acorns += record.lotto.prize; saveRecord(); refreshSide(); cv.remove(); $('#lm').textContent = record.lotto.prize ? `🌰 ${record.lotto.prize}개 획득!` : '아쉽지만 꽝! 내일 또 도전'; toast(record.lotto.prize ? `도토리 ${record.lotto.prize}개 당첨! 🌰` : '꽝이에요 😢'); const a = document.querySelector('.left .stat b'); if (a) a.textContent = '🌰 ' + record.acorns; } };
+    cv.onpointerdown = e => { down = true; cv.setPointerCapture(e.pointerId); scratch(e); }; cv.onpointermove = e => { if (down) scratch(e); }; cv.onpointerup = () => { down = false; };
+  }
+}
 
 /* ================= 쥬크박스 ================= */
 function juke(){
@@ -1192,7 +1248,8 @@ function visit(v){
     ${visitPL(p)}
   <div class="hd bl">${esc(p.name)}님의 다이어리</div><div id="vp" style="margin-top:6px">불러오는 중...</div>
     <div class="hd bl" style="margin-top:12px">${esc(p.name)}님의 방명록</div><div id="gb" style="margin-top:6px"></div>
-  <button class="btn g" onclick="go('friends')">← 친구 목록</button>`);
+    <div class="row"><button class="btn g" onclick="go('friends')">← 친구 목록</button><button class="btn o" onclick="wave()">🌊 파도타기</button></div>`);
+
   bindLB($('#content'));
   const b = $('#vb'); if (b) b.onclick = () => startBGM(p.bgm);
    document.querySelectorAll('[data-vp]').forEach(x => x.onclick = () => startBGM(p.pl[x.dataset.vp]));
