@@ -1081,13 +1081,25 @@ async function album(){
 
 /* ================= 쥬크박스 ================= */
 function juke(){
+  profile.pl = profile.pl || [];
+  const pl = profile.pl;
   C(`<h3 class="sec hd">쥬크박스 · 내 배경음악</h3>
-  <p style="color:#888;line-height:1.6">유튜브 링크 또는 mp3 주소를 붙여넣으면 내 미니홈피 배경음악이 돼요. 친구가 놀러 오면 이 노래를 들을 수 있어요.</p>
+  <p style="color:#888;line-height:1.6">유튜브 링크 또는 mp3 주소를 붙여넣으면 내 미니홈피 배경음악이 돼요. 친구가 놀러 오면 이 노래를 들을 수 있어요.<br>⚠️ 공식 뮤직비디오는 '퍼가기'가 막힌 경우가 많아요. 안 나오면 가사 영상이나 오디오 영상 같은 다른 업로드 링크를 써 보세요.</p>
   <input class="f" id="bt" placeholder="노래 제목" value="${esc(profile.bgm.title)}"><input class="f" id="bu" placeholder="https://www.youtube.com/watch?v=..." value="${esc(profile.bgm.url)}">
-  <div class="row"><button class="btn" id="bs">저장하고 재생</button><button class="btn g" id="bd">노래 지우기</button></div>`);
-  $('#bs').onclick = () => { profile.bgm = { title: $('#bt').value.trim(), url: $('#bu').value.trim() }; saveProfile(); startBGM(profile.bgm); toast('저장했어요 🎵'); };
+  <div class="row"><button class="btn" id="bs">저장하고 재생</button><button class="btn g" id="bd">노래 지우기</button></div>
+  <h3 class="sec hd" style="margin-top:16px">내 플레이리스트 (${pl.length}곡)</h3>
+  <div id="pl">${pl.map((s, i) => `<div class="fl" style="padding:4px 0"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🎵 ${esc(s.title || s.url)}</span><button class="btn sm" data-pp="${i}">▶</button><button class="btn g sm" data-pd="${i}">×</button></div>`).join('') || '<span style="color:#aaa">노래를 저장하면 여기에 차곡차곡 쌓여요</span>'}</div>`);
+  $('#bs').onclick = () => {
+    const s = { title: $('#bt').value.trim(), url: $('#bu').value.trim() };
+    profile.bgm = s;
+    if (s.url && !pl.some(x => x.url === s.url)) { pl.unshift(s); pl.splice(50); }
+    saveProfile(); startBGM(s); toast('저장했어요 🎵'); juke();
+  };
   $('#bd').onclick = () => { profile.bgm = { title: '', url: '' }; saveProfile(); stopBGM(); curBGM = profile.bgm; updatePlayer(); juke(); };
+  document.querySelectorAll('[data-pp]').forEach(b => b.onclick = () => { profile.bgm = pl[b.dataset.pp]; saveProfile(); startBGM(profile.bgm); juke(); });
+  document.querySelectorAll('[data-pd]').forEach(b => b.onclick = () => { pl.splice(b.dataset.pd, 1); saveProfile(); juke(); });
 }
+
 
 /* ================= 방꾸미기 / 상점 ================= */
 function decor(){
