@@ -139,6 +139,8 @@ input.f,textarea.f{width:100%;padding:8px;border:1px solid var(--line);border-ra
 .cm{padding:3px 0;word-break:break-all}
 .cm .x{border:0;background:none;color:#aaa;cursor:pointer;padding:0 4px}
 
+ .ritem img{width:12cqw;display:block;pointer-events:none}
+.si .e img{width:56px;height:56px;object-fit:contain}
 @media(max-width:860px){
  .book{grid-template-columns:1fr}.title{grid-column:1}.ring{display:none}
  .left{min-height:0}.tabs{flex-direction:row;flex-wrap:wrap;margin:0;order:-1;grid-column:1}
@@ -264,8 +266,15 @@ const ITEMS = [
  {id:'books',e:'📚',p:5,n:'책더미'},{id:'teddy',e:'🧸',p:6,n:'곰인형'},{id:'pic',e:'🖼️',p:5,n:'액자'},
  {id:'mirror',e:'🪞',p:6,n:'거울'},{id:'pc',e:'🖥️',p:9,n:'컴퓨터'},{id:'piano',e:'🎹',p:12,n:'피아노'},
  {id:'cloud',e:'☁️',p:3,n:'구름'},{id:'star',e:'⭐',p:2,n:'별'},{id:'candle',e:'🕯️',p:3,n:'초'},
- {id:'cat',e:'🐈',p:14,n:'고양이'},{id:'sq',e:'🐿️',p:15,n:'다람쥐'},{id:'tree',e:'🌳',p:7,n:'나무'}
+ {id:'cat',e:'🐈',p:14,n:'고양이'},{id:'sq',e:'🐿️',p:15,n:'다람쥐'},{id:'tree',e:'🌳',p:7,n:'나무'},
+ {id:'c1',img:'01_Martin.png',p:20,n:'마틴'},
+ {id:'c2',img:'02_James.png',p:20,n:'제임스'},
+ {id:'c3',img:'03_Juhoon.png',p:20,n:'주훈'},
+ {id:'c4',img:'04_Seonghyeon.png',p:20,n:'성현'},
+ {id:'c5',img:'05_Keonho.png',p:20,n:'건호'}
+
 ];
+ const itemIcon = i => i ? (i.img ? `<img src="${esc(i.img)}" alt="">` : i.e) : '';
 const WALLS = [
  {id:'mint',n:'민트',c:'#cfe6dc',p:0,pat:'stripe'},{id:'sky',n:'하늘',c:'#cfe0f2',p:0,pat:''},{id:'pink',n:'핑크',c:'#f6d5dd',p:5,pat:'dots'},
  {id:'lemon',n:'레몬',c:'#f8ecb8',p:5,pat:'stripe'},{id:'lav',n:'라벤더',c:'#ddd5f2',p:8,pat:'dots'}
@@ -731,7 +740,8 @@ function roomHTML(p, edit){
   const [cx, cy] = clampChar(+r.cx || 50, +r.cy || 70);
   const say = !edit && p.mood ? String(p.mood).replace(/^\S+\s/, '') : '';
   return `<div class="room ${edit ? 'edit' : ''}" id="room">${svg}
-  ${items.map(it => `<div class="ritem" data-uid="${it.uid}" style="left:${it.x}%;top:${it.y}%;z-index:${Math.round(it.y)}">${ITEMS.find(i => i.id === it.id)?.e || ''}${edit ? `<i class="rm" data-rm="${it.uid}">×</i>` : ''}</div>`).join('')}
+  ${items.map(it => `<div class="ritem" data-uid="${it.uid}" style="left:${it.x}%;top:${it.y}%;z-index:${Math.round(it.y)}">${itemIcon(ITEMS.find(i => i.id === it.id))}
+${edit ? `<i class="rm" data-rm="${it.uid}">×</i>` : ''}</div>`).join('')}
   <div class="rchar" style="left:${cx}%;top:${cy}%;z-index:${Math.round(cy)}">${charSVG(p.char)}</div>
   ${say ? `<div class="bubble" style="left:${cx}%;top:${Math.max(cy - 37, 9)}%">${esc(say)}</div>` : ''}</div>`;
 }
@@ -1086,11 +1096,13 @@ function decor(){
   C(`<h3 class="sec hd">방꾸미기 <span style="color:var(--orange)">🌰 ${record.acorns}</span></h3>
   <p style="color:#888;margin:0 0 6px">꾸밈 아이템과 캐릭터를 드래그해서 옮겨요. ×를 누르면 가방으로 돌아가요.</p>
   ${roomHTML(profile, true)}
-  <div class="lbl">내 가방 (눌러서 방에 놓기)</div><div class="shop">${inv.map(i => `<div class="si" data-place="${i.id}" style="cursor:pointer"><div class="e">${i.e}</div>${i.n} ×${(have[i.id] || 0) - (placed[i.id] || 0)}</div>`).join('') || '<span style="color:#aaa">비어 있어요. 아래 상점에서 도토리로 사 보세요!</span>'}</div>
+  <div class="lbl">내 가방 (눌러서 방에 놓기)</div><div class="shop">${inv.map(i => `<div class="si" data-place="${i.id}" style="cursor:pointer"><div class="e">${itemIcon(i)}</div>
+${i.n} ×${(have[i.id] || 0) - (placed[i.id] || 0)}</div>`).join('') || '<span style="color:#aaa">비어 있어요. 아래 상점에서 도토리로 사 보세요!</span>'}</div>
   <div class="lbl">벽지</div><div>${WALLS.map(w => `<span class="sw ${profile.room.wall === w.id ? 'on' : ''}" data-wall="${w.id}" style="background:${w.c}" title="${w.n} ${owns('wall:' + w.id, w.p) ? '' : '🌰' + w.p}">${owns('wall:' + w.id, w.p) ? '' : '🔒'}</span>`).join('')}</div>
   <div class="lbl">바닥</div><div>${FLOORS.map(f => `<span class="sw ${profile.room.floor === f.id ? 'on' : ''}" data-floor="${f.id}" style="background:${swCSS(f)}" title="${f.n} ${owns('floor:' + f.id, f.p) ? '' : '🌰' + f.p}">${owns('floor:' + f.id, f.p) ? '' : '🔒'}</span>`).join('')}</div>
   <h3 class="sec hd" style="margin-top:14px">도토리 상점</h3>
-  <div class="shop">${ITEMS.map(i => `<div class="si"><div class="e">${i.e}</div>${i.n}<br><button class="btn o sm" data-buy="${i.id}">🌰 ${i.p}</button></div>`).join('')}</div>
+  <div class="shop">${ITEMS.map(i => `<div class="si"><div class="e">${itemIcon(i)}</div>
+${i.n}<br><button class="btn o sm" data-buy="${i.id}">🌰 ${i.p}</button></div>`).join('')}</div>
   <p style="color:#888">🔒 벽지/바닥은 눌러서 도토리로 살 수 있어요 (가격은 마우스를 올리면 보여요)</p>`);
   enableDrag();
   $('#content').onclick = e => {
