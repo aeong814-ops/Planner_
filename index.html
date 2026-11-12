@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>도토리 미니홈피 - 기말고사 계획표</title>
+<title>☆ 。㉤i니홈㈌l 。☆</title>
 <style>
 @font-face{font-family:'DOSGothic';src:url(DOSGothic.woff) format('woff');font-display:swap}
 @font-face{font-family:'DOSIyagi';src:url(DOSIyagiBoldface.woff) format('woff');font-display:swap}
@@ -204,7 +204,9 @@ const ds = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const pd = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
 const todayS = () => ds(new Date());
 const daysTo = (a, b) => Math.round((pd(b) - pd(a)) / 864e5);
-const untilExam = s => daysTo(s, CONFIG.EXAM_DATE);
+const examDate = () => (typeof profile !== 'undefined' && profile && profile.dday && /^\d{4}-\d{2}-\d{2}$/.test(profile.dday.date)) ? profile.dday.date : CONFIG.EXAM_DATE;
+const ddTitle = () => (typeof profile !== 'undefined' && profile && profile.dday && profile.dday.title) || '기말고사';
+const untilExam = s => daysTo(s, examDate());
 const dLabel = n => n > 0 ? `D-${n}` : n === 0 ? 'D-DAY' : '';
 const rid = () => Math.random().toString(36).slice(2, 8);
 const safeImg = s => /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(s || '') ? s : '';
@@ -657,7 +659,7 @@ function renderShell(){
     ${visiting ? (p.status ? `<div class="stmsg">${esc(p.status)}</div>` : '') : `<input class="f" id="stIn" maxlength="30" placeholder="상태메시지를 적어 보세요" value="${esc(p.status || '')}" style="margin:8px 0 0">`}
     <div class="msg">${esc(p.msg)}</div>
     <div class="nm">${esc(p.name)}</div><div class="idl">@${esc(visiting?.id || me)}</div>
-    ${visiting ? `<div class="srow"><span>일촌</span><b>${(p.fl || []).length}명</b></div>` : `<div class="dbig hd">${dLabel(untilExam(todayS())) || '시험 끝!'}</div>
+    ${visiting ? `<div class="srow"><span>일촌</span><b>${(p.fl || []).length}명</b></div>` : `<div class="dbig hd"><small style="display:block;font-size:14px">${esc(ddTitle())}</small>${dLabel(untilExam(todayS())) || '끝!'}</div>
     <div class="stat"><span>도토리</span><b>🌰 ${record.acorns}</b></div>
     <div class="srow"><span>오늘 할 일</span><b>${dn0}/${tk0.length}</b></div><div class="bar"><i style="width:${tk0.length ? Math.round(dn0 / tk0.length * 100) : 0}%"></i></div>
     <div class="srow"><span>오늘 공부</span><b>${ah0}h ${am0}m</b></div>
@@ -842,6 +844,43 @@ function stopWatch(){
   if (presHost && presHost !== me) DB.del('visit', presHost + '/' + me).catch(() => {});
   presHost = null;
 }
+ /* ================= 출석체크 / 오늘의 운세 ================= */
+function attStatus(){ const a = (record && record.att) || {}; return { done: a.last === todayS(), streak: a.streak || 0, total: a.total || 0 }; }
+function checkIn(){
+  const t = todayS(), a = record.att || { last: '', streak: 0, total: 0 };
+  if (a.last === t) return toast('오늘은 이미 출석했어요 ✅');
+  const y = pd(t); y.setDate(y.getDate() - 1);
+  a.streak = a.last === ds(y) ? (a.streak || 0) + 1 : 1; a.total = (a.total || 0) + 1; a.last = t;
+  const bonus = a.streak % 7 === 0 ? 3 : 0, gain = 1 + bonus;
+  record.att = a; record.acorns += gain; saveRecord(); renderShell();
+  toast(bonus ? `${a.streak}일 연속 출석! 🌰 +${gain} (보너스 포함)` : `출석 완료! 🌰 +${gain} (${a.streak}일째)`);
+  if (tab === 'home') home();
+}
+function seeded(str){
+  let h = 2166136261; for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } if (!h) h = 1;
+  return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 100000) / 100000; };
+}
+const FORT = {
+  msg: ['오늘은 집중이 술술 되는 날이에요. 어려운 과목부터 시작해 보세요!', '작은 목표를 하나씩 지우다 보면 어느새 끝나 있을 거예요.', '잠깐 쉬어도 괜찮아요. 쉬고 나면 더 잘 풀려요.', '오늘 외운 건 오래 기억에 남아요. 소리 내서 읽어 보세요.', '모르는 문제가 나오면 표시만 해 두고 넘어가 보세요. 나중에 풀려요.', '뜻밖의 좋은 소식이 들려올지도 몰라요.', '친구에게 모르는 걸 물어보면 의외로 쉽게 풀려요.', '오늘은 정리하는 날! 노트를 한 번 훑어 보세요.', '물 한 잔 마시고 시작하면 머리가 맑아져요.', '아침보다 저녁에 더 잘 되는 날이에요. 조급해하지 마세요.', '지금까지 한 것만으로도 충분히 잘하고 있어요.', '실수한 문제가 오늘의 행운 문제가 될 거예요. 오답노트를 써 보세요.', '오늘은 새로운 걸 시작하기 좋은 날이에요.', '핸드폰은 잠시 멀리! 25분만 집중해 보세요.', '컨디션이 최고예요. 계획한 것보다 하나 더 도전해 보세요.', '졸릴 땐 스트레칭이 최고예요. 5분만 몸을 풀어 보세요.'],
+  color: [['빨강', '#e5484d'], ['주황', '#f08a3c'], ['노랑', '#f6c945'], ['초록', '#5aa04a'], ['하늘', '#6db3e8'], ['보라', '#9b7bd8'], ['분홍', '#f08fb0'], ['하양', '#ffffff']],
+  snack: ['초콜릿', '딸기우유', '젤리', '바나나', '아몬드', '떡볶이', '아이스크림', '컵라면'],
+  mission: ['30분 집중 후 5분 스트레칭', '오늘 공부한 것 소리 내어 설명해 보기', '책상 정리하고 시작하기', '가장 싫은 과목 15분만 하기', '오답 3개 다시 풀어 보기', '친구에게 응원 메시지 보내기', '일찍 자고 내일 일찍 일어나기', '물 2컵 마시기']
+};
+function showFortune(){
+  const r = seeded(me + ':' + todayS()), pick = a => a[Math.floor(r() * a.length)], star = n => '★'.repeat(n) + '☆'.repeat(5 - n), n5 = () => 1 + Math.floor(r() * 5);
+  const study = n5(), focus = n5(), acorn = n5(), msg = pick(FORT.msg), col = pick(FORT.color), num = 1 + Math.floor(r() * 9), snack = pick(FORT.snack), mission = pick(FORT.mission);
+  const d = document.createElement('div'); d.id = 'lb';
+  d.innerHTML = `<div style="background:#fff;color:#444;border:2px solid var(--line);border-radius:14px;padding:16px;max-width:340px;width:100%;text-align:center">
+    <div class="hd" style="color:var(--blue);font-size:20px">🔮 오늘의 운세</div><small>${esc(todayS())}</small>
+    <div style="margin:10px 0;line-height:1.6;color:#e08a3c">공부운 ${star(study)}<br>집중운 ${star(focus)}<br>도토리운 ${star(acorn)}</div>
+    <div style="margin:10px 0;line-height:1.5">${esc(msg)}</div>
+    <div class="fl"><span>행운의 색</span><span><span style="display:inline-block;width:14px;height:14px;background:${col[1]};border:1px solid #888;vertical-align:-2px"></span> ${esc(col[0])}</span></div>
+    <div class="fl"><span>행운의 숫자</span><span>${num}</span></div>
+    <div class="fl"><span>행운의 간식</span><span>${esc(snack)}</span></div>
+    <div class="fl"><span>오늘의 미션</span><span style="text-align:right">${esc(mission)}</span></div>
+    <button class="btn g" style="margin-top:10px">닫기</button></div>`;
+  d.onclick = () => d.remove(); document.body.appendChild(d);
+}
  
 /* ================= 홈 ================= */
 function home(){
@@ -851,7 +890,7 @@ function home(){
   done.sort((a, b) => b.at - a.at);
   const news = [
     tk.length ? `오늘 할 일 ${dn}/${tk.length} 완료${dn === tk.length ? ' 🎉' : ''}` : '오늘 할 일을 계획표에 적어 보세요',
-    n >= 0 ? `기말고사까지 ${dLabel(n)}` : '기말고사 끝! 수고했어요',
+        n >= 0 ? `${esc(ddTitle())}까지 ${dLabel(n)}` : `${esc(ddTitle())} 끝! 수고했어요`,
     done[0] ? `최근 인증: ${esc(done[0].t)}` : '아직 인증한 할 일이 없어요',
     `도토리 ${record.acorns}개 모았어요 🌰`
   ];
@@ -863,6 +902,7 @@ function home(){
   <div class="bgm"><span class="hd bl">BGM ▶</span><span class="ptitle"></span><button class="pbtn btn g sm">▶</button></div>
   <div class="hd bl">Miniroom <small>EXPRESS YOURSELF</small></div>${roomHTML(profile, false)}
   <div class="row"><button class="btn g" onclick="go('decor')">방 꾸미기</button><button class="btn g" onclick="go('story')">오늘 일기 쓰기</button><button class="btn o" onclick="go('diary')">계획표 열기</button></div>
+    <div class="row"><button class="btn o" onclick="checkIn()">${attStatus().done ? '✅ 오늘 출석 완료 · ' + attStatus().streak + '일째' : '📅 출석체크 (+🌰1)'}</button><button class="btn g" onclick="showFortune()">🔮 오늘의 운세</button></div>
   <div class="two" style="margin-top:14px"><div><div class="hd bl">오늘 할 일 <small>TO DO</small></div>
     ${tk.length ? tk.map(t => `<div class="td ${t.done ? 'd' : ''}">${t.done ? '✔' : '○'} ${esc(t.t)}</div>`).join('') : '<div style="color:#aaa;padding:6px 0">아직 없어요</div>'}</div>
    <div><div class="hd bl">What friends say <small>친구 새 글</small></div><div id="feed" style="margin-top:6px">불러오는 중...</div></div></div>`);
@@ -959,7 +999,7 @@ function cal(){
     cells += `<div class="cd ${s === todayS() ? 'today' : ''} ${n === 0 ? 'exam' : ''} ${n < 0 ? 'out' : ''}" data-d="${s}"><span>${i}</span><em>${dLabel(n)}</em>${ts.length ? `<i>${ts.filter(t => t.done).length}/${ts.length}</i>` : ''}</div>`;
   }
   C(`<h3 class="sec hd">기말고사 D-day 달력</h3><div class="dnav"><button class="btn g sm" id="pm">◀</button><b>${y}년 ${m + 1}월</b><button class="btn g sm" id="nm">▶</button></div>
-  <div class="cal" id="cg">${cells}</div><p style="color:#888">날짜를 누르면 그날 계획표로 이동해요. 오른쪽 아래 숫자는 완료/전체 할 일이에요. (기준일: ${CONFIG.EXAM_DATE})</p>`);
+  <div class="cal" id="cg">${cells}</div><p style="color:#888">날짜를 누르면 그날 계획표로 이동해요. 오른쪽 아래 숫자는 완료/전체 할 일이에요. (기준일: ${examDate()})</p>`);
   $('#pm').onclick = () => { calMonth = new Date(y, m - 1, 1); cal(); }; $('#nm').onclick = () => { calMonth = new Date(y, m + 1, 1); cal(); };
   $('#cg').onclick = e => { const c = e.target.closest('.cd'); if (c) { planDate = c.dataset.d; go('diary'); } };
 }
@@ -1133,6 +1173,10 @@ function prof(){
   <div class="lbl">옷</div><div class="outf">${OUTFITS.map((o, i) => `<div class="${c.outfit === i ? 'on' : ''}" data-k="outfit" data-v="${i}" title="${o.n}">${charSVG({ ...c, outfit: i, bear: false, bunny: false })}<span class="pc">${o.n}<br>${owned('outfit', i) ? '✓' : '🌰' + o.p}</span></div>`).join('')}</div>
   <div class="two"><div><div class="lbl">모자</div><div class="opts">${op('hat', HATS)}</div><div class="lbl">모자/머리띠 색</div>${sw('hatc', HATC)}</div>
   <div><div class="lbl">머리핀</div><div class="opts">${op('clip', CLIPS)}</div><div class="lbl">소품</div><div class="opts">${tg('glasses', c.glasses ? '안경 ON' : '안경')} ${tg('bear', c.bear ? '곰인형 ON' : '곰인형')} ${tg('bunny', c.bunny ? '토끼인형 ON' : '토끼인형')}</div></div></div>
+   <h3 class="sec hd" style="margin-top:16px">디데이 설정</h3>
+  <div class="lbl" style="margin-top:0">디데이 이름</div><input class="f" id="ddt" maxlength="12" value="${esc(ddTitle())}" placeholder="예: 기말고사, 수능, 여행">
+  <div class="lbl">날짜</div><input class="f" id="ddd" type="date" value="${esc(examDate())}">
+  <div class="row"><button class="btn" id="dds">디데이 저장</button><button class="btn g" id="ddr">기본값으로</button></div>
   <h3 class="sec hd" style="margin-top:16px">페이지 색 꾸미기</h3>
   <div class="lbl" style="margin-top:0">추천 색 조합</div>
   <div class="opts">${THEMES.map(([n, t], i) => `<button class="btn sm g" data-tp="${i}" style="border-color:${t.accent}"><span style="display:inline-block;width:12px;height:12px;background:${t.cover};border:1px solid ${t.accent};vertical-align:-1px"></span> ${n}</button>`).join(' ')}</div>
@@ -1158,6 +1202,13 @@ function prof(){
     profile.char = normChar(c); saveProfile(); prof(); renderShell();
   };
   $('#ps').onclick = () => { profile.name = $('#pn').value.trim() || me; profile.msg = $('#pm').value.trim(); saveProfile(); renderShell(); toast('저장했어요 ✨'); };
+   $('#dds').onclick = () => {
+    const date = $('#ddd').value, title = $('#ddt').value.trim() || '디데이';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return toast('날짜를 골라 주세요');
+    profile.dday = { title, date }; const dd = pd(date); calMonth = new Date(dd.getFullYear(), dd.getMonth(), 1);
+    saveProfile(); renderShell(); toast('디데이를 바꿨어요 📅');
+  };
+  $('#ddr').onclick = () => { delete profile.dday; calMonth = new Date(2026, 10, 1); saveProfile(); renderShell(); prof(); toast('기본값으로 돌렸어요'); };
 }
  pixelize(document.body);
 new MutationObserver(ms => ms.forEach(m => { m.addedNodes.forEach(n => pixelize(n.nodeType === 1 ? n : n.parentNode)); if (m.type === 'characterData') pixelize(m.target.parentNode); })).observe(document.body, { childList: true, subtree: true, characterData: true });
