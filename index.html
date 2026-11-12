@@ -660,7 +660,7 @@ function logout(){ stopBGM(); localStorage.removeItem('dt:session'); location.re
 })();
 
 /* ================= 공통 화면 ================= */
-const TABS = [['home','홈'],['diary','계획표'],['cal','달력'],['story','다이어리'],['guest','방명록'],['album','사진첩'],['juke','쥬크박스'],['note','알림'],
+const TABS = [['home','홈'],['diary','계획표'],['cal','달력'],['story','다이어리'],['guest','방명록'],['album','사진첩'],['juke','쥬크박스'],['note','우체통'],
 ['play','놀이터'],['decor','방꾸미기'],['friends','친구'],['prof','프로필']];
 function go(t, arg){
    stopWatch();
@@ -819,7 +819,8 @@ document.addEventListener('click', async e => {
     const cb = post.querySelector('.cbox'); cb.classList.toggle('hidden'); if (!cb.classList.contains('hidden')) loadComments(post);
   } else if (sd) {
     const inp = post.querySelector('.cin'), text = inp.value.trim(); if (!text) return;
-    try { await DB.set('cmt', k + Date.now() + '_' + me, { by: me, name: profile.name, text, ts: Date.now() }); inp.value = ''; await loadComments(post); hydratePost(post); } catch (er) { toast('댓글을 올리지 못했어요'); }
+    try { await DB.set('cmt', k + Date.now() + '_' + me, { by: me, name: profile.name, text, ts: Date.now() });  sendMail(post.dataset.pa, { t: 'cmt', text });
+inp.value = ''; await loadComments(post); hydratePost(post); } catch (er) { toast('댓글을 올리지 못했어요'); }
   } else if (dl) {
     if (!confirm('댓글을 지울까요?')) return;
     try { await DB.del('cmt', dl.dataset.cdel); await loadComments(post); hydratePost(post); } catch (er) { toast('삭제하지 못했어요'); }
@@ -1140,13 +1141,13 @@ function play(){
     cv.onpointerdown = e => { down = true; cv.setPointerCapture(e.pointerId); scratch(e); }; cv.onpointermove = e => { if (down) scratch(e); }; cv.onpointerup = () => { down = false; };
   }
 }
-/* ================= 도토리 선물 + 알림 ================= */
+/* ================= 도토리 선물 + 우체통 ================= */
 const GIFT_MAX = 10; /* 한 번에, 그리고 하루에 보낼 수 있는 최대 개수 */
-let giftPhoto = '';
+let giftPhoto = ''; const openL = new Set();
 const unreadN = () => (record && record.inbox ? record.inbox.filter(x => !x.r).length : 0);
 function noteBadge(){
   const n = unreadN();
-  document.querySelectorAll('#tabs .tab').forEach(b => { if ((b.getAttribute('onclick') || '').includes("'note'")) b.textContent = '알림' + (n ? ` (${n})` : ''); });
+  document.querySelectorAll('#tabs .tab').forEach(b => { if ((b.getAttribute('onclick') || '').includes("'note'")) b.textContent = '우체통' + (n ? ` (${n})` : ''); });
 }
 async function claimGifts(){
   try {
@@ -1156,7 +1157,7 @@ async function claimGifts(){
       const g = await DB.get('gift', id); await DB.del('gift', id);
       if (g && g.n >= 1 && g.n <= GIFT_MAX) {
         sum += g.n; who.push(String(g.from));
-        const it = { t: 'gift', from: String(g.from).slice(0, 20), n: g.n, msg: String(g.msg || '').slice(0, 30), ts: +g.ts || Date.now() };
+        const it = { id: rid(), t: 'gift', from: String(g.from).slice(0, 20), n: g.n, msg: String(g.msg || '').slice(0, 30), ts: +g.ts || Date.now() };
         if (safeImg(g.img)) { const k = `${me}/${Date.now()}_${rid()}`; try { await DB.set('gimg', k, { img: g.img }); it.gi = k; } catch (e) {} }
         record.inbox.unshift(it);
       }
@@ -1167,15 +1168,16 @@ async function claimGifts(){
 async function claimNotes(){
   try {
     const ids = await DB.list('note', me + '/'); if (!ids.length) return;
-    record.inbox = record.inbox || [];
+    record.inbox = record.inbox || []; let got = 0;
     for (const id of ids) {
       const g = await DB.get('note', id); await DB.del('note', id);
-      if (g && g.t === 'friend' && g.from) { record.inbox.unshift({ t: 'friend', from: String(g.from).slice(0, 20), ts: +g.ts || Date.now() }); popup(`👋 ${g.from}님이 일촌 신청을 했어요!`); }
+      if (g && ['friend', 'cmt', 'guest'].includes(g.t) && g.from) { record.inbox.unshift({ id: rid(), t: g.t, from: String(g.from).slice(0, 20), text: String(g.text || '').slice(0, 60), ts: +g.ts || Date.now() }); got++; }
     }
-    record.inbox.splice(50); saveRecord(); noteBadge();
+    if (got) { record.inbox.splice(50).forEach(x => { if (x.gi) DB.del('gimg', x.gi).catch(() => {}); }); saveRecord(); noteBadge(); popup(`💌 우체통에 새 편지가 ${got}통 도착했어요!`); }
   } catch (e) {}
 }
-const sendFriendNote = f => DB.set('note', `${f}/${Date.now()}_${me}`, { t: 'friend', from: me, ts: Date.now() }).catch(() => {});
+const sendMail = (to, o) => { if (!to || to === me) return; DB.set('note', `${to}/${Date.now()}_${rid()}`, { ...o, from: me, ts: Date.now() }).catch(() => {}); };
+const sendFriendNote = f => sendMail(f, { t: 'friend' });
 async function sendGift(to, n, msg, img){
   n = Math.floor(+n);
   const gd = record.giftDay && record.giftDay.d === todayS() ? record.giftDay : { d: todayS(), n: 0 };
@@ -1192,7 +1194,7 @@ function giftUI(){
   const old = $('#giftBox'); if (old) old.remove();
   const gd = record.giftDay && record.giftDay.d === todayS() ? record.giftDay : { n: 0 };
   $('#content').insertAdjacentHTML('beforeend', `<div class="box" id="giftBox" style="margin-top:12px"><div class="hd bl">🎁 도토리 선물</div>
-    <p style="color:#888;line-height:1.6">친구에게 내 도토리와 짧은 메시지를 보내요. 받는 친구는 누가 줬는지 알림에서 볼 수 있어요. 오늘 남은 선물 가능 개수: <b>${GIFT_MAX - gd.n}</b>개</p>
+    <p style="color:#888;line-height:1.6">친구에게 내 도토리와 짧은 메시지를 보내요. 받는 친구는 누가 줬는지 우체통에서 볼 수 있어요. 오늘 남은 선물 가능 개수: <b>${GIFT_MAX - gd.n}</b>개</p>
     ${record.friends.length ? `<div class="row"><select class="f" id="gTo" style="margin:0">${record.friends.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('')}</select><input class="f" id="gN" type="number" min="1" max="${GIFT_MAX}" value="1" style="margin:0;flex:0 0 70px"></div>
     <div class="row"><input class="f" id="gM" maxlength="30" placeholder="응원 메시지 (30자, 비워도 돼요)" style="margin:0"><button class="btn o" id="gGo" style="flex:0 0 80px">보내기</button></div>
     <div class="row"><button class="btn g sm" id="gPb" style="flex:0 0 auto">📷 사진 첨부</button><input type="file" id="gP" accept="image/*" hidden><span id="gPs" style="flex:1;align-self:center;color:#888"></span></div>` : '<span style="color:#aaa">먼저 친구를 추가해 보세요</span>'}</div>`);
@@ -1203,24 +1205,39 @@ function giftUI(){
     $('#gP').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { giftPhoto = await compress(f, 480, .6); st(); } catch (er) { toast('사진을 불러오지 못했어요'); } };
   }
 }
+function letterBody(x){
+  if (x.t === 'gift') return `🎁 도토리 <b>${x.n}</b>개가 들어 있어요!${x.msg ? `<br><span style="color:#888">💌 “${esc(x.msg)}”</span>` : ''}${x.gi ? `<br><img data-gi="${esc(x.gi)}" style="display:none;max-width:140px;max-height:140px;border-radius:8px;margin-top:4px;cursor:pointer">` : ''}`;
+  if (x.t === 'cmt') return `💬 내 다이어리 글에 댓글을 남겼어요<br><span style="color:#888">“${esc(x.text)}”</span>`;
+  if (x.t === 'guest') return `📖 내 방명록에 글을 남겼어요<br><span style="color:#888">“${esc(x.text)}”</span>`;
+  return `👋 일촌 신청이에요!${record.friends.includes(x.from) ? ' (이미 일촌이에요 💞)' : `<br><button class="btn o sm" data-ac="${esc(x.from)}" style="margin-top:4px">일촌 맺기</button>`}`;
+}
 function notePage(){
   record.inbox = record.inbox || [];
-  const L = record.inbox;
-  C(`<h3 class="sec hd">알림 🔔</h3>
-  <div class="row" style="margin-bottom:8px"><button class="btn g sm" id="nc">모두 지우기</button></div>
-  <div id="nl">${L.map(x => `<div class="fl" style="align-items:flex-start;${x.r ? 'opacity:.6' : ''}"><span style="flex:1;line-height:1.6">${x.t === 'gift' ? `🎁 <b>${esc(x.from)}</b>님이 도토리 <b>${x.n}</b>개를 선물했어요!${x.msg ? `<br><span style="color:#888">💌 “${esc(x.msg)}”</span>` : ''}` : `👋 <b>${esc(x.from)}</b>님이 일촌 신청을 했어요`}<br>${x.gi ? `<br><img data-gi="${esc(x.gi)}" style="display:none;max-width:140px;max-height:140px;border-radius:8px;margin-top:4px;cursor:pointer">` : ''}<br><small style="color:#aaa">${esc(ds(new Date(x.ts)))}</small></span>${x.t === 'friend' && !record.friends.includes(x.from) ? `<button class="btn o sm" data-ac="${esc(x.from)}">일촌 맺기</button>` : ''}</div>`).join('') || '<span style="color:#aaa">아직 알림이 없어요</span>'}</div>`);
-  $('#nc').onclick = () => { if (!confirm('알림을 모두 지울까요?')) return; L.forEach(x => { if (x.gi) DB.del('gimg', x.gi).catch(() => {}); }); record.inbox = []; saveRecord(); notePage(); };
+  const L = record.inbox; L.forEach(x => { if (!x.id) x.id = rid(); });
+  const un = unreadN();
+  C(`<h3 class="sec hd">우체통 📮</h3>
+  <p style="color:#888;margin:0 0 8px">${un ? `안 읽은 편지가 <b style="color:var(--orange)">${un}통</b> 있어요. 편지를 눌러서 열어 보세요!` : '새 편지가 없어요'} <small>(전체 ${L.length}통)</small></p>
+  <div class="row" style="margin-bottom:8px"><button class="btn g sm" id="nc">편지 모두 버리기</button></div>
+  <div id="nl">${L.map(x => {
+    const open = openL.has(x.id);
+    if (!x.r) return `<div data-lt="${esc(x.id)}" style="cursor:pointer;border:2px dashed var(--accent,#e8a);border-radius:10px;background:#fffaf0;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px"><span style="font-size:30px">✉️</span><span style="flex:1;line-height:1.5"><b>${esc(x.from)}</b>님에게서 편지가 왔어요<br><small style="color:#aaa">${esc(ds(new Date(x.ts)))} · 눌러서 열기</small></span></div>`;
+    if (!open) return `<div data-lt="${esc(x.id)}" style="cursor:pointer;opacity:.65;border:1px solid #ddd;border-radius:10px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px"><span style="font-size:22px">📩</span><span style="flex:1"><b>${esc(x.from)}</b>님의 편지 <small style="color:#aaa">${esc(ds(new Date(x.ts)))}</small></span></div>`;
+    return `<div style="border:1px solid #ddd;border-radius:10px;background:#fff;padding:12px;margin-bottom:8px"><div data-lt="${esc(x.id)}" style="cursor:pointer;display:flex;justify-content:space-between"><b>📨 ${esc(x.from)}님의 편지</b><small style="color:#aaa">${esc(ds(new Date(x.ts)))} ▲</small></div><div style="margin-top:8px;line-height:1.7">${letterBody(x)}</div></div>`;
+  }).join('') || '<span style="color:#aaa">아직 편지가 없어요</span>'}</div>`);
+  $('#nc').onclick = () => { if (!confirm('편지를 모두 버릴까요?')) return; L.forEach(x => { if (x.gi) DB.del('gimg', x.gi).catch(() => {}); }); record.inbox = []; openL.clear(); saveRecord(); notePage(); noteBadge(); };
   document.querySelectorAll('#nl img[data-gi]').forEach(im => DB.get('gimg', im.dataset.gi).then(d => { if (d && safeImg(d.img)) { im.src = d.img; im.style.display = 'inline-block'; } }).catch(() => {}));
   $('#nl').onclick = e => {
     const im = e.target.closest('img[data-gi]'); if (im && im.src) return lightbox(im.src, '');
-    const b = e.target.closest('[data-ac]'); if (!b) return; const f = b.dataset.ac;
-    if (!record.friends.includes(f)) { record.friends.push(f); syncFriends(); sendFriendNote(f); toast('일촌이 됐어요 💞'); }
-    notePage();
+    const b = e.target.closest('[data-ac]');
+    if (b) { const f = b.dataset.ac; if (!record.friends.includes(f)) { record.friends.push(f); syncFriends(); sendFriendNote(f); toast('일촌이 됐어요 💞'); } notePage(); return; }
+    const lt = e.target.closest('[data-lt]'); if (!lt) return;
+    const x = L.find(v => v.id === lt.dataset.lt); if (!x) return;
+    if (!x.r) { x.r = 1; openL.add(x.id); saveRecord(); } else if (openL.has(x.id)) openL.delete(x.id); else openL.add(x.id);
+    notePage(); noteBadge();
   };
-  if (L.some(x => !x.r)) { L.forEach(x => { x.r = 1; }); saveRecord(); }
   noteBadge();
 }
-
+ 
 /* ================= 쥬크박스 ================= */
 function juke(){
   profile.pl = profile.pl || [];
@@ -1290,7 +1307,8 @@ function renderGuest(host, box){
   $('#gg').onclick = async () => {
     const text = $('#gt').value.trim(); if (!text) return toast('내용을 적어 주세요');
     const ts = Date.now();
-    try { await DB.set('guest', host + '/' + ts + '_' + rid(), { by: me, name: profile.name, text, ts }); $('#gt').value = ''; toast('남겼어요 ✏️'); load(); }
+    try { await DB.set('guest', host + '/' + ts + '_' + rid(), { by: me, name: profile.name, text, ts });  sendMail(host, { t: 'guest', text });
+$('#gt').value = ''; toast('남겼어요 ✏️'); load(); }
     catch (e) { toast('남기기에 실패했어요'); }
   };
   box.onclick = async e => { const x = e.target.closest('[data-gdel]'); if (x && confirm('이 글을 지울까요?')) { await DB.del('guest', x.dataset.gdel); load(); } };
