@@ -151,6 +151,30 @@ input.f,textarea.f{width:100%;padding:8px;border:1px solid var(--line);border-ra
 .pgr .keys button:active{transform:translateY(2px);box-shadow:none}
 .pgr .brand{color:#fff;font-size:11px;text-align:center;margin-top:8px;letter-spacing:1px}
 
+ .cbub{position:absolute;transform:translate(-50%,-100%);z-index:400;background:#fff;border:2px solid #333;box-shadow:2px 2px 0 #333;padding:.5cqw 1.8cqw;font-size:3.6cqw;line-height:1.25;max-width:46cqw;width:max-content;text-align:center;word-break:break-all;pointer-events:none;animation:cpop .2s steps(3)}
+.cbub:after{content:'';position:absolute;left:50%;bottom:-6px;width:6px;height:6px;background:#fff;border-right:2px solid #333;border-bottom:2px solid #333;transform:translateX(-50%) rotate(45deg)}
+@keyframes cpop{from{transform:translate(-50%,-70%) scale(.7)}to{transform:translate(-50%,-100%) scale(1)}}
+.sms{max-width:340px;margin:10px auto 0;padding:12px 12px 10px;border:3px solid #26335c;border-radius:20px 20px 30px 30px;background:linear-gradient(#c9d3ea,#9fb0d3);box-shadow:0 4px 0 #18224a}
+.sms .smscr{background:#dcebf7;border:3px solid #5b6c9a;border-radius:4px;color:#1b2a55;box-shadow:inset 0 0 0 2px #fff}
+.sms .smtop{display:flex;justify-content:space-between;padding:3px 8px;background:#3d5aa8;color:#fff;font-size:14px}
+.sms .smfr{margin:0 8px;padding:6px 0 4px;font-size:14px;border-bottom:1px dotted #7d8fbf}
+.sms .smbd{padding:8px;min-height:60px;font-size:17px;line-height:1.4;word-break:break-all}
+.sms .smtm{padding:0 8px 4px;font-size:12px;color:#6b7aa8;text-align:right;min-height:16px}
+.sms .smks{display:flex;justify-content:space-between;padding:3px 6px;background:#e8f0fa;border-top:1px solid #9fb0d3}
+.sms .smks button{border:0;background:none;color:#1b2a55;font-size:14px;padding:2px 6px}
+.sms .smwr{display:flex;gap:6px;margin-top:8px}
+.sms .smwr input{flex:1;min-width:0;margin:0;padding:6px 8px;border:2px solid #5b6c9a;background:#f4f9ff;border-radius:4px;font-size:16px}
+.sms .smwr .smgo{flex:0 0 auto;border:2px solid #26335c;background:#ffd84a;border-radius:4px;padding:4px 12px;color:#26335c;font-size:15px}
+.sms.pk{background:linear-gradient(#ffd6e6,#f7a8c8);border-color:#c0538a;box-shadow:0 4px 0 #8f3563}
+.sms.pk .smscr{background:radial-gradient(#ffc3da 22%,transparent 24%) 0 0/12px 12px,#ffe3ee;border-color:#e06fa3;color:#7a2b50}
+.sms.pk .smtop{background:#ef6fa5}
+.sms.pk .smfr{border-color:#e9a0c0}
+.sms.pk .smtm{color:#c0407a}
+.sms.pk .smks{background:#ffeef5;border-color:#f3a6c6}
+.sms.pk .smks button{border:2px solid #e06fa3;border-radius:12px;background:#fff;color:#c0407a;padding:1px 12px}
+.sms.pk .smwr input{border-color:#e06fa3;background:#fff8fb}
+.sms.pk .smwr .smgo{background:#ef6fa5;border-color:#c0538a;color:#fff;border-radius:12px}
+
 @media(max-width:860px){
  .book{grid-template-columns:1fr}.title{grid-column:1}.ring{display:none}
  .left{min-height:0}.tabs{flex-direction:row;flex-wrap:wrap;margin:0;order:-1;grid-column:1}
@@ -1441,13 +1465,12 @@ ${i.n}<br><button class="btn o sm" data-buy="${i.id}">🌰 ${i.p}</button></div>
   <p style="color:#888;margin:0 0 6px">꾸밈 아이템과 캐릭터를 드래그해서 옮겨요. ×를 누르면 가방으로 돌아가요.</p>
   ${roomHTML(profile, true)}
    <div class="lbl">내 가방 – 꾸밈 (눌러서 방에 놓기)</div><div class="shop">${invH(FUR(inv)) || '<span style="color:#aaa">비어 있어요. 아래 상점에서 도토리로 사 보세요!</span>'}</div>
-  <div class="lbl">내 가방 – 캐릭터</div><div class="shop">${invH(CHR(inv)) || '<span style="color:#aaa">캐릭터가 없어요</span>'}</div>
+  ${CGROUPS.map(g => `<div class="lbl">내 가방 – 캐릭터 · ${g}</div><div class="shop">${invH(CHR(inv).filter(i => i.g === g)) || '<span style="color:#aaa">없어요</span>'}</div>`).join('')}
   <div class="lbl">벽지</div><div>${WALLS.map(w => `<span class="sw ${profile.room.wall === w.id ? 'on' : ''}" data-wall="${w.id}" style="background:${w.c}" title="${w.n} ${owns('wall:' + w.id, w.p) ? '' : '🌰' + w.p}">${owns('wall:' + w.id, w.p) ? '' : '🔒'}</span>`).join('')}</div>
   <div class="lbl">바닥</div><div>${FLOORS.map(f => `<span class="sw ${profile.room.floor === f.id ? 'on' : ''}" data-floor="${f.id}" style="background:${swCSS(f)}" title="${f.n} ${owns('floor:' + f.id, f.p) ? '' : '🌰' + f.p}">${owns('floor:' + f.id, f.p) ? '' : '🔒'}</span>`).join('')}</div>
     <h3 class="sec hd" style="margin-top:14px">도토리 상점 – 꾸밈</h3>
   <div class="shop">${shopH(FUR(ITEMS))}</div>
-  <h3 class="sec hd" style="margin-top:14px">도토리 상점 – 캐릭터</h3>
-  <div class="shop">${shopH(CHR(ITEMS))}</div>
+  ${CGROUPS.map(g => `<h3 class="sec hd" style="margin-top:14px">도토리 상점 – 캐릭터 · ${g}</h3><div class="shop">${shopH(CHR(ITEMS).filter(i => i.g === g))}</div>`).join('')}
   <p style="color:#888">🔒 벽지/바닥은 눌러서 도토리로 살 수 있어요 (가격은 마우스를 올리면 보여요)</p>`);
   enableDrag();
   $('#content').onclick = e => {
