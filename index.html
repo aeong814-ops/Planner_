@@ -935,13 +935,21 @@ async function loadVisitors(host){
 }
 function drawVisitors(list){
   const room = $('#room'); if (!room) return;
-  room.querySelectorAll('.vchar').forEach(e => e.remove());
+  room.querySelectorAll('.vchar,.vpet').forEach(e => e.remove());
   list.forEach(v => {
     const [x, y] = slot(v.id), d = document.createElement('div');
     d.className = 'vchar';
     d.style.cssText = `position:absolute;left:${x}%;top:${y}%;z-index:${Math.round(y)};width:15cqw;transform:translate(-50%,-96%);pointer-events:none`;
     d.innerHTML = charSVG(v.char).replace('<svg ', '<svg style="width:100%;display:block" ') + `<i class="vn" style="display:block;text-align:center;font-style:normal;font-size:3.4cqw;color:#444;text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 3px #fff;white-space:nowrap;margin-top:-1cqw">${esc(v.name)}</i>`;
     room.appendChild(d);
+    const q = v.pet;
+    if (q && typeof q === 'object') {
+      const o = { st: Math.max(0, Math.min(3, q.st | 0)), ty: PT[q.ty] ? q.ty : '', ac: PACC.some(a => a[0] === q.ac) ? q.ac : '', m: ['n', 'happy', 'sad', 'sleep', 'eat'].includes(q.md) ? q.md : 'n' };
+      const e = document.createElement('div'); e.className = 'vpet';
+      e.style.cssText = `position:absolute;left:${Math.min(x + 9, 94)}%;top:${y}%;z-index:${Math.round(y)};width:8cqw;transform:translate(-50%,-96%);pointer-events:none`;
+      e.innerHTML = petSVG(o).replace('<svg ', '<svg style="width:100%;display:block" ') + `<i style="display:block;text-align:center;font-style:normal;font-size:2.8cqw;color:#444;text-shadow:0 0 2px #fff,0 0 2px #fff;white-space:nowrap">${esc(String(q.n || '').slice(0, 8))}</i>`;
+      room.appendChild(e);
+    }
   });
 }
  /* ================= 방 채팅 (옛날 폰 문자) ================= */
@@ -1034,7 +1042,7 @@ function watchRoom(host){
   const tick = async () => {
     if (presHost !== host) return;
     try {
-      if (host !== me) await DB.set('visit', host + '/' + me, { name: profile.name, char: profile.char, ts: Date.now() });
+   if (host !== me) await DB.set('visit', host + '/' + me, { name: profile.name, char: profile.char, ts: Date.now(), pet: (profile.bring && profile.pet) ? profile.pet : null });
       if (presHost === host) drawVisitors(await loadVisitors(host));
     } catch (e) {}
   };
@@ -1764,6 +1772,7 @@ function friends(){
 function visit(v){
   const p = v.profile; p.bgm = p.bgm || { url: '', title: '' }; p.room = Object.assign({ wall: 'mint', floor: 'check', items: [], cx: 50, cy: 70 }, p.room);
   C(`<h3 class="sec hd">${esc(p.name)}님의 방에 놀러 왔어요 🏠</h3>${roomHTML(p, false)}
+  ${profile.pet ? `<div class="row"><button class="btn ${profile.bring ? 'o' : 'g'}" id="bringPet">🐣 ${esc(profile.pet.n)} ${profile.bring ? '데려가는 중 ✓' : '데려가기'}</button></div>` : ''}
   <div class="box" style="margin-top:10px"><div class="fl"><span>🎵 ${esc(p.bgm.title || (p.bgm.url ? '배경음악' : '노래 없음'))}</span>${p.bgm.url ? '<button class="btn sm" id="vb">이 노래 듣기</button>' : ''}</div>
   <div style="padding-top:6px">${esc(p.mood || '')} · ${esc(p.msg)}</div></div>
     ${visitPL(p)}
@@ -1776,6 +1785,7 @@ function visit(v){
   const b = $('#vb'); if (b) b.onclick = () => startBGM(p.bgm);
    document.querySelectorAll('[data-vp]').forEach(x => x.onclick = () => startBGM(p.pl[x.dataset.vp]));
    watchRoom(v.id);
+    const bp = $('#bringPet'); if (bp) bp.onclick = () => { profile.bring = !profile.bring; saveProfile(); bp.className = 'btn ' + (profile.bring ? 'o' : 'g'); bp.textContent = `🐣 ${profile.pet.n} ${profile.bring ? '데려가는 중 ✓' : '데려가기'}`; toast(profile.bring ? `${profile.pet.n}을(를) 데려왔어요! 🐣` : '집에 두고 왔어요'); watchRoom(v.id); };
    renderGuest(v.id, $('#gb'));
   if (playing && p.bgm.url) startBGM(p.bgm);
   friendPosts(v.id, 10).then(r => {
