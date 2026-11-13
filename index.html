@@ -716,13 +716,13 @@ function logout(){ stopBGM(); localStorage.removeItem('dt:session'); location.re
 
 /* ================= 공통 화면 ================= */
 const TABS = [['home','홈'],['diary','계획표'],['cal','달력'],['story','다이어리'],['guest','방명록'],['album','사진첩'],['juke','쥬크박스'],['note','우체통'],['pager','삐삐'],
-['play','놀이터'],['decor','방꾸미기'],['friends','친구'],['prof','프로필']];
+['play','놀이터'],['decor','방꾸미기'],['closet','옷장'],['friends','친구'],['prof','프로필']];
 function go(t, arg){
    stopWatch();
   if (visiting && t !== 'visit') { visiting = null; if (playing) startBGM(profile.bgm); else { curBGM = profile.bgm; updatePlayer(); } }
   tab = t; if (t === 'visit') visiting = arg;
   window.scrollTo({ top: 0 });
-  renderShell(); ({ home, diary, cal, story, guest, album, juke, play, decor, friends, prof, visit, note: notePage, pager: pagerPage })[t](arg);
+  renderShell(); ({ home, diary, cal, story, guest, album, juke, play, decor, closet, friends, prof, visit, note: notePage, pager: pagerPage })[t](arg);
 }
 function renderShell(){
   const p = visiting?.profile || profile;
@@ -1462,23 +1462,51 @@ function visit(v){
 }
 
 /* ================= 프로필 ================= */
-function prof(){
-  const c = profile.char, th = profile.theme;
-    const owned = (k, v) => !priceOf(k, v) || record.owned.includes(k + ':' + v);
+/* ================= 옷장 ================= */
+let cTab = 'outfit';
+function closet(){
+  const c = profile.char;
+  const owned = (k, v) => !priceOf(k, v) || record.owned.includes(k + ':' + v);
   const tag = (k, v) => owned(k, v) ? '' : ` 🔒🌰${priceOf(k, v)}`;
   const sw = (key, list) => list.map(v => `<span class="sw ${c[key] === v ? 'on' : ''}" data-k="${key}" data-v="${v}" style="background:${v}" title="${owned(key, v) ? '' : '도토리 ' + priceOf(key, v) + '개'}">${owned(key, v) ? '' : '🔒'}</span>`).join('');
   const op = (key, list) => list.map(([v, n]) => `<button class="btn sm ${c[key] === v ? '' : 'g'}" data-k="${key}" data-v="${v}">${n}${tag(key, v)}</button>`).join(' ');
   const tg = (key, label) => `<button class="btn sm ${c[key] ? '' : 'g'}" data-k="${key}" data-v="${c[key] ? '0' : '1'}">${label}${c[key] ? '' : tag(key, '1')}</button>`;
-  C(`<h3 class="sec hd">프로필 · 내 캐릭터 <span style="color:var(--orange)">🌰 ${record.acorns}</span></h3>
+  const CT = [['outfit', '옷'], ['hair', '머리'], ['face', '얼굴'], ['acc', '악세서리']];
+  const body = cTab === 'outfit'
+    ? `<div class="outf">${OUTFITS.map((o, i) => `<div class="${c.outfit === i ? 'on' : ''}" data-k="outfit" data-v="${i}" title="${o.n}">${charSVG({ ...c, outfit: i, bear: false, bunny: false })}<span class="pc">${o.n}<br>${owned('outfit', i) ? '✓' : '🌰' + o.p}</span></div>`).join('')}</div>`
+    : cTab === 'hair'
+    ? `<div class="lbl" style="margin-top:0">머리모양</div><div class="opts">${op('hs', HAIRSTYLES)}</div><div class="lbl">앞머리</div><div class="opts">${op('bang', BANGS)}</div><div class="lbl">머리색</div>${sw('hair', HAIRS)}`
+    : cTab === 'face'
+    ? `<div class="lbl" style="margin-top:0">피부</div>${sw('skin', SKINS)}<div class="lbl">눈 색</div>${sw('eye', EYES)}<div class="lbl">눈 모양</div><div class="opts">${tg('shut', c.shut ? '감은 눈' : '뜬 눈')}</div>`
+    : `<div class="lbl" style="margin-top:0">모자</div><div class="opts">${op('hat', HATS)}</div><div class="lbl">모자/머리띠 색</div>${sw('hatc', HATC)}<div class="lbl">머리핀</div><div class="opts">${op('clip', CLIPS)}</div><div class="lbl">소품</div><div class="opts">${tg('glasses', c.glasses ? '안경 ON' : '안경')} ${tg('bear', c.bear ? '곰인형 ON' : '곰인형')} ${tg('bunny', c.bunny ? '토끼인형 ON' : '토끼인형')}</div>`;
+  C(`<h3 class="sec hd">옷장 👗 <span style="color:var(--orange)">🌰 ${record.acorns}</span></h3>
   <p style="color:#888;margin:0 0 6px">🔒는 도토리로 살 수 있어요. 한 번 사면 계속 쓸 수 있어요.</p>
-  <div class="two"><div class="box" style="text-align:center;background:linear-gradient(#e8f0f6,#f8f1ea)"><div style="width:150px;margin:auto">${charSVG(c)}</div></div>
-  <div><div class="lbl" style="margin-top:0">피부</div>${sw('skin', SKINS)}<div class="lbl">머리색</div>${sw('hair', HAIRS)}
-   <div class="lbl">머리모양</div><div class="opts">${op('hs', HAIRSTYLES)}</div><div class="lbl">앞머리</div><div class="opts">${op('bang', BANGS)}</div>
-   <div class="lbl">눈</div>${sw('eye', EYES)} <span class="opts" style="display:inline-flex">${tg('shut', c.shut ? '감은 눈' : '뜬 눈')}</span></div></div>
-  <div class="lbl">옷</div><div class="outf">${OUTFITS.map((o, i) => `<div class="${c.outfit === i ? 'on' : ''}" data-k="outfit" data-v="${i}" title="${o.n}">${charSVG({ ...c, outfit: i, bear: false, bunny: false })}<span class="pc">${o.n}<br>${owned('outfit', i) ? '✓' : '🌰' + o.p}</span></div>`).join('')}</div>
-  <div class="two"><div><div class="lbl">모자</div><div class="opts">${op('hat', HATS)}</div><div class="lbl">모자/머리띠 색</div>${sw('hatc', HATC)}</div>
-  <div><div class="lbl">머리핀</div><div class="opts">${op('clip', CLIPS)}</div><div class="lbl">소품</div><div class="opts">${tg('glasses', c.glasses ? '안경 ON' : '안경')} ${tg('bear', c.bear ? '곰인형 ON' : '곰인형')} ${tg('bunny', c.bunny ? '토끼인형 ON' : '토끼인형')}</div></div></div>
-   <h3 class="sec hd" style="margin-top:16px">디데이 설정</h3>
+  <div class="box" style="text-align:center;background:linear-gradient(#e8f0f6,#f8f1ea)"><div style="width:130px;margin:auto">${charSVG(c)}</div></div>
+  <div class="opts" style="margin-bottom:10px">${CT.map(([k, n]) => `<button class="btn ${cTab === k ? '' : 'g'}" data-ct="${k}" style="flex:1">${n}</button>`).join('')}</div>
+  ${body}`);
+  $('#content').onclick = e => {
+    const ct = e.target.closest('[data-ct]'); if (ct) { cTab = ct.dataset.ct; closet(); return; }
+    const t = e.target.closest('[data-k]'); if (!t) return; const k = t.dataset.k, v = t.dataset.v;
+    const pr = priceOf(k, v), key = k + ':' + v;
+    if (pr && !record.owned.includes(key)) {
+      if (record.acorns < pr) return toast('도토리가 부족해요 🌰');
+      if (!confirm(`도토리 ${pr}개로 살까요?`)) return;
+      record.acorns -= pr; record.owned.push(key); saveRecord(); toast('구입했어요!');
+    }
+    c[k] = k === 'outfit' ? +v : (k === 'glasses' || k === 'bear' || k === 'bunny' || k === 'shut') ? v === '1' : v;
+    profile.char = normChar(c); saveProfile(); closet(); renderShell();
+  };
+}
+
+/* ================= 프로필 ================= */
+function prof(){
+  const th = profile.theme;
+  C(`<h3 class="sec hd">프로필</h3>
+  <div class="lbl" style="margin-top:0">이름(별명)</div><input class="f" id="pn" maxlength="12" value="${esc(profile.name)}">
+  <div class="lbl">상태메시지</div><input class="f" id="pst" maxlength="30" value="${esc(profile.status || '')}" placeholder="상태메시지를 적어 보세요">
+  <div class="lbl">한 줄 소개</div><textarea class="f" id="pm" maxlength="60" rows="2">${esc(profile.msg)}</textarea>
+  <button class="btn" id="ps">저장</button>
+  <h3 class="sec hd" style="margin-top:16px">디데이 설정</h3>
   <div class="lbl" style="margin-top:0">디데이 이름</div><input class="f" id="ddt" maxlength="12" value="${esc(ddTitle())}" placeholder="예: 기말고사, 수능, 여행">
   <div class="lbl">날짜</div><input class="f" id="ddd" type="date" value="${esc(examDate())}">
   <div class="row"><button class="btn" id="dds">디데이 저장</button><button class="btn g" id="ddr">기본값으로</button></div>
@@ -1490,34 +1518,22 @@ function prof(){
   <div class="opts">${THEMES.map(([n, t], i) => `<button class="btn sm g" data-tp="${i}" style="border-color:${t.accent}"><span style="display:inline-block;width:12px;height:12px;background:${t.cover};border:1px solid ${t.accent};vertical-align:-1px"></span> ${n}</button>`).join(' ')}</div>
   <div class="lbl">직접 고르기</div>
   <div class="opts"><label>표지 <input type="color" data-tc="cover" value="${th.cover}"></label> <label>배경 <input type="color" data-tc="bg" value="${th.bg}"></label> <label>포인트 <input type="color" data-tc="accent" value="${th.accent}"></label></div>
-  <div class="lbl">배경 무늬</div><div class="opts">${PATS.map(([v, n]) => `<button class="btn sm ${th.pat === v ? '' : 'g'}" data-tpat="${v}">${n}</button>`).join(' ')}</div>
-  <div class="lbl">이름(별명)</div><input class="f" id="pn" maxlength="12" value="${esc(profile.name)}">
-  <div class="lbl">한 줄 소개</div><textarea class="f" id="pm" maxlength="60" rows="2">${esc(profile.msg)}</textarea>
-  <button class="btn" id="ps">저장</button>`);
+  <div class="lbl">배경 무늬</div><div class="opts">${PATS.map(([v, n]) => `<button class="btn sm ${th.pat === v ? '' : 'g'}" data-tpat="${v}">${n}</button>`).join(' ')}</div>`);
   $('#content').oninput = e => { const k = e.target.dataset.tc; if (!k) return; profile.theme[k] = e.target.value; applyTheme(profile.theme); saveProfile(); };
   $('#content').onclick = e => {
     const tp = e.target.closest('[data-tp]'), pt = e.target.closest('[data-tpat]');
     if (tp) { profile.theme = normTheme({ ...profile.theme, ...THEMES[+tp.dataset.tp][1] }); applyTheme(profile.theme); saveProfile(); prof(); renderShell(); return; }
     if (pt) { profile.theme.pat = pt.dataset.tpat; applyTheme(profile.theme); saveProfile(); prof(); return; }
-    const t = e.target.closest('[data-k]'); if (!t) return; const k = t.dataset.k, v = t.dataset.v;
-    const pr = priceOf(k, v), key = k + ':' + v;
-    if (pr && !record.owned.includes(key)) {
-      if (record.acorns < pr) return toast('도토리가 부족해요 🌰');
-      if (!confirm(`도토리 ${pr}개로 살까요?`)) return;
-      record.acorns -= pr; record.owned.push(key); saveRecord(); toast('구입했어요!');
-    }
-    c[k] = k === 'outfit' ? +v : (k === 'glasses' || k === 'bear' || k === 'bunny' || k === 'shut') ? v === '1' : v;
-    profile.char = normChar(c); saveProfile(); prof(); renderShell();
   };
-  $('#ps').onclick = () => { profile.name = $('#pn').value.trim() || me; profile.msg = $('#pm').value.trim(); saveProfile(); renderShell(); toast('저장했어요 ✨'); };
-   $('#dds').onclick = () => {
+  $('#ps').onclick = () => { profile.name = $('#pn').value.trim() || me; profile.status = $('#pst').value.trim(); profile.msg = $('#pm').value.trim(); saveProfile(); renderShell(); toast('저장했어요 ✨'); };
+  $('#dds').onclick = () => {
     const date = $('#ddd').value, title = $('#ddt').value.trim() || '디데이';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return toast('날짜를 골라 주세요');
     profile.dday = { title, date }; const dd = pd(date); calMonth = new Date(dd.getFullYear(), dd.getMonth(), 1);
     saveProfile(); renderShell(); toast('디데이를 바꿨어요 📅');
   };
   $('#ddr').onclick = () => { delete profile.dday; calMonth = new Date(2026, 10, 1); saveProfile(); renderShell(); prof(); toast('기본값으로 돌렸어요'); };
-   $('#dda').onclick = () => {
+  $('#dda').onclick = () => {
     const title = $('#ddt2').value.trim(), date = $('#ddd2').value;
     if (!title) return toast('이름을 적어 주세요');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return toast('날짜를 골라 주세요');
