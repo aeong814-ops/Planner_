@@ -190,6 +190,13 @@ input.f,textarea.f{width:100%;padding:8px;border:1px solid var(--line);border-ra
  .srow{display:flex;justify-content:space-between;padding-top:5px}.srow b{color:var(--orange);font-weight:400}
 .bar{height:10px;border:1px solid var(--line);border-radius:5px;background:#fff;overflow:hidden;margin:4px 0 6px}.bar i{display:block;height:100%;background:var(--orange)}
 .stmsg{margin-top:8px;border:1px dotted var(--line);border-radius:6px;padding:4px 6px;text-align:center;color:#666;word-break:break-all}
+.ptbox{position:relative;height:230px;border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.ptbox>svg{width:150px;position:absolute;left:50%;bottom:16px;margin-left:-75px;animation:pbob 1.4s steps(2) infinite}
+.ptsay{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #888;border-radius:6px;padding:3px 10px;max-width:92%;text-align:center;font-size:15px;z-index:2}
+@keyframes pbob{50%{bottom:22px}}
+.pgg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:220px;margin:8px auto}.pgg button{height:56px;font-size:24px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.rpet{position:absolute;width:8cqw;transform:translate(-50%,-96%);animation:rbob 1.6s steps(2) infinite;pointer-events:none}.rpet svg{width:100%;display:block}
+@keyframes rbob{50%{transform:translate(-50%,-112%)}}
 </style>
 </head>
 <body class="pat-grid">
@@ -738,13 +745,13 @@ function logout(){ stopBGM(); localStorage.removeItem('dt:session'); location.re
 
 /* ================= 공통 화면 ================= */
 const TABS = [['home','홈'],['diary','계획표'],['cal','달력'],['story','다이어리'],['guest','방명록'],['album','사진첩'],['juke','쥬크박스'],['note','우체통'],['pager','삐삐'],
-['play','놀이터'],['decor','방꾸미기'],['closet','옷장'],['friends','친구'],['prof','프로필']];
+['play','놀이터'],['decor','방꾸미기'],['tama','다마고치'],['closet','옷장'],['friends','친구'],['prof','프로필']];
 function go(t, arg){
    stopWatch();
   if (visiting && t !== 'visit') { visiting = null; if (playing) startBGM(profile.bgm); else { curBGM = profile.bgm; updatePlayer(); } }
   tab = t; if (t === 'visit') visiting = arg;
   window.scrollTo({ top: 0 });
-  renderShell(); ({ home, diary, cal, story, guest, album, juke, play, decor, closet, friends, prof, visit, note: notePage, pager: pagerPage })[t](arg);
+  renderShell(); ({ home, diary, cal, story, guest, album, juke, play, tama, decor, closet, friends, prof, visit, note: notePage, pager: pagerPage })[t](arg);
 }
 function renderShell(){
   const p = visiting?.profile || profile;
@@ -826,6 +833,7 @@ function roomHTML(p, edit){
   ${items.map(it => `<div class="ritem" data-uid="${it.uid}" style="left:${it.x}%;top:${it.y}%;z-index:${Math.round(it.y)}">${itemIcon(ITEMS.find(i => i.id === it.id))}
 ${edit ? `<i class="rm" data-rm="${it.uid}">×</i>` : ''}</div>`).join('')}
   <div class="rchar" style="left:${cx}%;top:${cy}%;z-index:${Math.round(cy)}">${charSVG(p.char)}</div>
+    ${p.pet ? `<div class="rpet" style="left:${Math.min(cx + 17, 90)}%;top:${cy}%;z-index:${Math.round(cy)}">${petSVG({ st: p.pet.st, ty: p.pet.ty, m: p.pet.md, ac: p.pet.ac })}</div>` : ''}
   ${say ? `<div class="bubble" style="left:${cx}%;top:${Math.max(cy - 37, 9)}%">${esc(say)}</div>` : ''}</div>`;
 }
 function enableDrag(){
@@ -1439,6 +1447,207 @@ function pagerPage(){
   };
 }
 
+ /* ================= 다마고치 ================= */
+const PT = {
+  glutton: { n: '먹보형', c: '#ffe3a3', h: '#c4672b', fav: 'cookie', say: ['간식 냄새가 나는 것 같아요 🍪', '오늘은 뭐 먹어요?'] },
+  sleepy: { n: '잠꾸러기형', c: '#e4dcff', h: '#4a3f9a', fav: 'milk', say: ['하암… 졸려요', '이불이 제일 좋아요 💤'] },
+  cute: { n: '애교쟁이형', c: '#ffdfe8', h: '#d1457a', fav: 'cake', say: ['쓰다듬어 주세요 💗', '주인 언제 오지? 기다리는 중…'] },
+  prank: { n: '장난꾸러기형', c: '#d9f6c3', h: '#2f8a4b', fav: 'rice', say: ['히히, 뭐 하고 놀까요?', '비밀인데… 방을 살짝 어질렀어요'] }
+};
+const FOODS = [['rice', '🍙', '주먹밥', 0, 18, 0], ['cookie', '🍪', '도토리 쿠키', 1, 26, 6], ['milk', '🥛', '딸기우유', 2, 16, 16], ['cake', '🍰', '케이크', 4, 32, 22]];
+const PACC = [['ribbon', '🎀', '리본', 4], ['acorn', '🌰', '도토리 모자', 6], ['glasses', '👓', '안경', 5], ['scarf', '🧣', '목도리', 5], ['crown', '👑', '왕관', 12]];
+const PSTAGE = ['알', '아기', '어린이', '성체'];
+const PDIARY = {
+  glutton: ['오늘 밥 맛있었어 ♡ 내일도 놀아주기로 약속!', '쿠키 냄새가 꿈에 나왔어요. 내일은 진짜 먹고 싶다!'],
+  sleepy: ['오늘은 낮잠을 세 번이나 잤어요. 행복해요 ☁️', '안녕… 하암 벌써 졸려요'],
+  cute: ['쓰다듬어 줘서 오늘도 행복했어요 💗', '내일도 같이 놀자! 약속이야!'],
+  prank: ['히히 오늘 방을 살짝 어질렀는데… 비밀이야!', '내일은 무슨 장난을 칠까?']
+};
+function petGrid(o){
+  const N = 26, g = Array.from({ length: N }, () => Array(N).fill(null));
+  const P = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && x < N && y >= 0 && y < N) g[y][x] = c; };
+  const R = (x0, y0, x1, y1, c) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) P(x, y, c); };
+  const E = (cx, cy, rx, ry, c, t) => { for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) { const dx = (x - cx) / rx, dy = (y - cy) / ry; if (dx * dx + dy * dy <= 1 && (!t || t(x, y))) P(x, y, c); } };
+  const T = PT[o.ty] || PT.cute, B = T.c, H = T.h, K = '#2a2540', PK = '#ff9db4', WH = '#ffffff', cx = 12.5, st = o.st | 0, m = o.m || 'n';
+  if (st === 0) {
+    E(cx, 14, 7.2, 9.2, '#fff7e3');
+    [[9, 10], [15, 12], [10, 16], [16, 17], [12, 20]].forEach(([x, y]) => R(x, y, x + 1, y + 1, '#ffd0a8'));
+    if (o.crack) [[10, 13], [11, 14], [12, 13], [13, 14], [14, 13], [15, 14]].forEach(([x, y]) => P(x, y, K));
+  } else {
+    const cf = st === 1 ? { hy: 15, rx: 7, ry: 6.2, ear: 2 } : st === 2 ? { hy: 11, rx: 7.5, ry: 6.5, ear: 3 } : { hy: 9, rx: 8.2, ry: 7, ear: 3 };
+    const { hy, rx, ry, ear } = cf;
+    if (st >= 2) {
+      const by = hy + ry + (st === 2 ? 2 : 2.5), bw = st === 2 ? 4 : 4.6, bh = st === 2 ? 3.6 : 4.2, fy = Math.round(by + bh);
+      E(cx, by, bw, bh, B); R(9, fy, 11, fy + 1, B); R(14, fy, 16, fy + 1, B);
+      if (st === 3) { R(7, Math.round(by) - 2, 8, Math.round(by) + 2, B); R(17, Math.round(by) - 2, 18, Math.round(by) + 2, B); } else { P(8, by, B); P(17, by, B); }
+    } else { R(9, hy + 6, 11, hy + 7, B); R(14, hy + 6, 16, hy + 7, B); }
+    E(cx, hy, rx, ry, B); E(cx, hy, rx, ry, H, (x, y) => y <= hy - 2);
+    const tY = Math.round(hy - ry * Math.sqrt(1 - Math.pow(5.5 / rx, 2)));
+    for (let r = 0; r <= ear; r++) { const w = Math.max(1, 4 - r); R(6, tY - r, 6 + w - 1, tY - r, H); R(19 - w + 1, tY - r, 19, tY - r, H); }
+    const ey = hy + (st === 1 ? 0 : 1), my = ey + (st === 1 ? 3 : 4);
+    if (m === 'sleep') [9, 16].forEach(c => R(c - 1, ey + 1, c + 1, ey + 1, K));
+    else if (m === 'happy' || m === 'eat') [9, 16].forEach(c => { P(c - 1, ey + 2, K); P(c, ey + 1, K); P(c + 1, ey + 2, K); });
+    else { R(8, ey, 9, ey + 2, K); R(16, ey, 17, ey + 2, K); P(8, ey, WH); P(16, ey, WH); if (m === 'sad') { P(9, ey + 3, '#8ad0ff'); P(16, ey + 3, '#8ad0ff'); } }
+    R(6, ey + 2, 7, ey + 3, PK); R(18, ey + 2, 19, ey + 3, PK);
+    if (m === 'eat') R(12, my, 13, my + 1, '#c2455a');
+    else if (m === 'sad') { P(11, my + 1, K); P(12, my, K); P(13, my, K); P(14, my + 1, K); }
+    else if (m === 'sleep') { P(12, my, K); P(13, my, K); }
+    else { P(11, my, K); P(12, my + 1, K); P(13, my + 1, K); P(14, my, K); }
+    const top = hy - Math.round(ry);
+    if (o.ac === 'ribbon') { R(10, top - 1, 11, top + 1, '#ff7aa8'); R(14, top - 1, 15, top + 1, '#ff7aa8'); R(12, top, 13, top, '#d14a80'); }
+    else if (o.ac === 'acorn') { E(cx, top + 0.5, 4.5, 2.2, '#b8793c'); R(12, top - 3, 13, top - 2, '#7a4a22'); }
+    else if (o.ac === 'crown') { R(9, top - 1, 16, top, '#ffd54a'); [9, 12, 13, 16].forEach(x => P(x, top - 2, '#ffd54a')); }
+    else if (o.ac === 'glasses') { const gc = '#5a4a7a'; [[6, 11], [14, 19]].forEach(([a, b]) => { R(a, ey - 1, b, ey - 1, gc); R(a, ey + 3, b, ey + 3, gc); R(a, ey, a, ey + 2, gc); R(b, ey, b, ey + 2, gc); }); R(12, ey, 13, ey, gc); }
+    else if (o.ac === 'scarf') { const sy = hy + Math.round(ry) - 1; R(8, sy, 17, sy + 1, '#e5484d'); R(16, sy + 2, 17, sy + 4, '#e5484d'); }
+    if (o.d) [[3, 5], [4, 6], [21, 7], [22, 8], [3, 18], [22, 17]].forEach(([x, y]) => P(x, y, '#9bb05a'));
+  }
+  return g;
+}
+const petCache = {};
+function petSVG(o){
+  const key = JSON.stringify(o); if (petCache[key]) return petCache[key];
+  const g = petGrid(o), N = 26, OL = '#1d2d5c', out = g.map(r => r.slice());
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (!g[y][x] && ((x > 0 && g[y][x - 1]) || (x < N - 1 && g[y][x + 1]) || (y > 0 && g[y - 1][x]) || (y < N - 1 && g[y + 1][x]))) out[y][x] = OL;
+  const paths = {};
+  for (let y = 0; y < N; y++) { let x = 0; while (x < N) { const c = out[y][x]; if (!c) { x++; continue; } let x2 = x; while (x2 + 1 < N && out[y][x2 + 1] === c) x2++; (paths[c] ||= []).push(`M${x} ${y}h${x2 - x + 1}v1h-${x2 - x + 1}z`); x = x2 + 1; } }
+  return petCache[key] = `<svg viewBox="0 0 ${N} ${N}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">` + Object.entries(paths).map(([c, p]) => `<path fill="${c}" d="${p.join('')}"/>`).join('') + '</svg>';
+}
+let pfx = '', pPanel = '', petT = null;
+const pClamp = v => Math.max(0, Math.min(100, Math.round(v)));
+const petStage = p => { if (!p.hatched) return 0; const d = (nowMs() - p.hatched) / 864e5; return d < 2 ? 1 : d < 5 ? 2 : 3; };
+function petTick(p){
+  const now = nowMs(), h = Math.max(0, Math.min(48, (now - (p.last || now)) / 36e5)); p.last = now;
+  if (!p.hatched) return;
+  const T = p.ty, sl = p.sleep, low = p.hunger < 20 || p.clean < 20;
+  p.hunger = pClamp(p.hunger - h * (T === 'glutton' ? 5.5 : 4) * (sl ? .5 : 1));
+  p.happy = pClamp(p.happy - h * (T === 'cute' ? 3.5 : 2.5) * (low ? 1.6 : 1));
+  p.clean = pClamp(p.clean - h * (T === 'prank' ? 3.5 : 2.2));
+  p.energy = pClamp(p.energy + h * (sl ? (T === 'sleepy' ? 16 : 12) : -(T === 'sleepy' ? 4.5 : 3)));
+  if (sl && p.energy >= 100) p.sleep = false;
+}
+function petMood(p){
+  if (!p.hatched) return 'n'; if (p.sleep) return 'sleep';
+  if (Math.min(p.hunger, p.happy, p.clean, p.energy) < 25) return 'sad';
+  return (p.hunger + p.happy + p.clean + p.energy) / 4 >= 75 ? 'happy' : 'n';
+}
+function petLabel(p){
+  if (!p.hatched) return '알'; if (p.sleep) return '수면 중';
+  const l = [[p.hunger, '배고픔'], [p.clean, '지저분함'], [p.energy, '졸림'], [p.happy, '심심함']].sort((a, b) => a[0] - b[0])[0];
+  return l[0] < 30 ? l[1] : '건강함';
+}
+function petSay(p){
+  if (!p.hatched) return '…톡톡 (알이 흔들려요)'; if (p.sleep) return 'zzZ…';
+  if (p.hunger < 30) return '배고파요… 🍙'; if (p.clean < 30) return '몸이 찝찝해요… 씻고 싶어요'; if (p.energy < 25) return '너무 졸려요… 💤'; if (p.happy < 30) return '심심해요… 놀아 주세요';
+  const r = seeded(me + ':' + Math.floor(nowMs() / 36e5)), s = PT[p.ty].say; return s[Math.floor(r() * s.length)];
+}
+function petEvent(p){
+  const now = nowMs(); if (!p.hatched || p.sleep || now - (p.evAt || 0) < 3 * 36e5 || Math.random() > .5) return;
+  p.evAt = now; const r = Math.random(); let m;
+  if (r < .25) { record.acorns++; m = '산책하다가 도토리를 발견했어요! 🌰+1'; }
+  else if (r < .45) { p.happy = pClamp(p.happy + 8); m = '갑자기 춤을 추기 시작했어요 ♪'; }
+  else if (r < .6) { p.happy = pClamp(p.happy + 6); m = '새로운 친구를 만났어요!'; }
+  else if (r < .75) m = '오늘따라 보고 싶어요 💗';
+  else if (r < .9 && p.ty === 'prank') { p.clean = pClamp(p.clean - 20); m = '방을 어질러 놓았어요… (청결도↓)'; }
+  else { p.happy = pClamp(p.happy + 4); m = '하늘을 보며 멍때리는 중…'; }
+  p.log = [{ t: now, m }, ...(p.log || [])].slice(0, 5); saveRecord();
+}
+function petCheck(p){
+  const now = nowMs();
+  if (!p.hatched && now >= p.hatchAt) { p.hatched = now; p.ty = Object.keys(PT)[Math.floor(Math.random() * 4)]; p.hunger = 70; p.happy = 80; p.clean = 80; p.energy = 80; p.last = now; p.exp = 0; toast('🐣 알에서 부화했어요!'); saveRecord(); }
+  petTick(p);
+  const st = petStage(p); p.alb = p.alb || []; if (!p.alb.some(a => a.s === st)) { p.alb.push({ s: st, d: todayS() }); saveRecord(); }
+  const d = todayS();
+  if (p.hatched && p.dd !== d) {
+    p.dd = d; const r = seeded(me + d + 'pet'), a = PDIARY[p.ty], low = p.hunger < 30 ? ' (조금 배고팠어요…)' : p.clean < 30 ? ' (몸이 찝찝했어요…)' : '';
+    p.diary = [{ d, t: a[Math.floor(r() * a.length)] + low }, ...(p.diary || [])].slice(0, 14); saveRecord();
+  }
+  petEvent(p);
+}
+function petPub(){
+  const p = record.pet, n = p ? { n: p.name, st: petStage(p), ty: p.ty || '', ac: p.accOn || '', md: p.hatched ? petMood(p) : 'n' } : null;
+  if (JSON.stringify(n) === JSON.stringify(profile.pet || null)) return; profile.pet = n; saveProfile();
+}
+function fx(m){ pfx = m; if (tab === 'tama') tama(); setTimeout(() => { pfx = ''; const g = $('#pgame'); if (tab === 'tama' && !(g && g.innerHTML)) tama(); }, 1800); }
+function petGame(p){
+  if (p.sleep) return toast('쿨쿨 자는 중이에요 💤'); if (p.energy < 15) return toast('너무 피곤해서 못 놀아요 💤');
+  const box = $('#pgame'); let score = 0, round = 0, cur = -1, t = null;
+  const draw = () => { box.innerHTML = `<div style="text-align:center;margin-top:8px">🧸 도토리를 잡아요! ${round}/10 · 점수 ${score}</div><div class="pgg">${[...Array(9)].map((_, i) => `<button data-c="${i}">${i === cur ? '🌰' : ''}</button>`).join('')}</div>`; };
+  const end = () => {
+    box.innerHTML = ''; const g = Math.round(score * (p.ty === 'cute' ? 3.6 : 2.4));
+    p.happy = pClamp(p.happy + g); p.energy = pClamp(p.energy - 10); p.hunger = pClamp(p.hunger - 6); p.exp = (p.exp || 0) + 2 + Math.floor(score / 3);
+    let bonus = ''; if (score >= 8 && p.gd !== todayS()) { p.gd = todayS(); record.acorns++; bonus = ' 🌰+1'; }
+    saveRecord(); petPub(); toast(`${score}개 잡았어요! 행복도 +${g}${bonus}`); fx('happy');
+  };
+  const next = () => { if (!$('#pgame') || !box.isConnected) return; if (round >= 10) return end(); round++; cur = Math.floor(Math.random() * 9); draw(); t = setTimeout(next, 900); };
+  box.onclick = e => { const b = e.target.closest('[data-c]'); if (b && cur >= 0 && +b.dataset.c === cur) { score++; cur = -1; clearTimeout(t); draw(); t = setTimeout(next, 150); } };
+  next();
+}
+function tama(){
+  clearInterval(petT); const p = record.pet;
+  if (!p) {
+    C(`<h3 class="sec hd">다마고치 🐣 <small>MY PET ROOM</small></h3><div class="box" style="text-align:center"><div style="width:110px;margin:10px auto">${petSVG({ st: 0 })}</div>
+    <p style="color:#888;line-height:1.6">나만의 다마고치를 키워 봐요! 알에서 태어나 <b>아기 → 어린이 → 성체</b>로 자라요.<br>밥을 주고, 놀아 주고, 씻기고, 재워 주세요. 성격은 부화할 때 정해져요.</p>
+    <input class="f" id="pnm" maxlength="8" placeholder="이름을 지어 주세요 (예: 꼬마 도토리)"><button class="btn o" id="padopt">🥚 알 받기</button></div>`);
+    $('#padopt').onclick = () => { const n = $('#pnm').value.trim() || '꼬마 도토리'; record.pet = { name: n, hatchAt: nowMs() + 10 * 60000, hatched: 0, last: nowMs(), exp: 0, accOwned: [], accOn: '', alb: [{ s: 0, d: todayS() }], diary: [] }; saveRecord(); petPub(); toast('알을 받았어요! 10분쯤 뒤에 부화해요 🥚'); tama(); };
+    return;
+  }
+  petCheck(p); petPub();
+  const w = WALLS.find(x => x.id === profile.room.wall) || WALLS[0], f = FLOORS.find(x => x.id === profile.room.floor) || FLOORS[0];
+  const bg = `linear-gradient(${lighten(w.c, .15)} 0 68%, ${f.b} 68% 100%)`;
+  if (!p.hatched) {
+    const left = Math.max(0, Math.ceil((p.hatchAt - nowMs()) / 60000));
+    C(`<h3 class="sec hd">다마고치 🐣 <small>MY PET ROOM</small></h3><div class="ptbox" style="background:${bg}"><div class="ptsay">…톡톡 (알이 흔들려요)</div>${petSVG({ st: 0, crack: left <= 2 })}</div>
+    <p style="text-align:center;color:#888">${esc(p.name)}의 알이 부화하기까지 약 <b>${left}분</b></p><div class="row"><button class="btn o" id="ptap">🥚 쓰다듬기 (−30초)</button></div>`);
+    $('#ptap').onclick = () => { p.hatchAt -= 30000; saveRecord(); toast('따뜻하게 쓰다듬었어요 ♡'); tama(); };
+    petT = setInterval(() => { if (tab !== 'tama') return clearInterval(petT); tama(); }, 30000);
+    return;
+  }
+  const st = petStage(p), mood = pfx || petMood(p), T = PT[p.ty], age = Math.floor((nowMs() - p.hatched) / 864e5), lv = 1 + Math.floor((p.exp || 0) / 15);
+  const bar = (ic, n, v) => `<div class="srow"><span>${ic} ${n}</span><b>${v}%</b></div><div class="bar"><i style="width:${v}%"></i></div>`;
+  const panel = pPanel === 'feed' ? `<div class="box" style="margin-top:8px"><div class="lbl" style="margin-top:0">무엇을 줄까요? (좋아하는 간식: ${esc(FOODS.find(x => x[0] === T.fav)[2])})</div><div class="opts">${FOODS.map(x => `<button class="btn g" data-food="${x[0]}">${x[1]} ${x[2]} ${x[3] ? '🌰' + x[3] : '무료'}</button>`).join('')}</div></div>`
+    : pPanel === 'shop' ? `<div class="box" style="margin-top:8px"><div class="lbl" style="margin-top:0">옷 입히기 (눌러서 사기 / 입기 / 벗기)</div><div class="opts">${PACC.map(x => `<button class="btn ${p.accOn === x[0] ? '' : 'g'}" data-pbuy="${x[0]}">${x[1]} ${x[2]} ${(p.accOwned || []).includes(x[0]) ? (p.accOn === x[0] ? '✓' : '보유') : '🌰' + x[3]}</button>`).join('')}</div></div>` : '';
+  C(`<h3 class="sec hd">다마고치 🐣 <small>MY PET ROOM</small></h3>
+  <div class="ptbox" style="background:${bg}"><div class="ptsay">${esc(petSay(p))}</div>${petSVG({ st, ty: p.ty, m: mood, ac: p.accOn, d: p.clean < 35 })}</div>
+  <div style="text-align:center;margin:8px 0"><b style="font-size:18px">${esc(p.name)}</b> <small>${PSTAGE[st]} · ${T.n}</small><br><small>레벨 ${lv} · 태어난 지 ${age + 1}일째 · 상태: <b>${petLabel(p)}</b></small></div>
+  ${bar('🍙', '배부름', p.hunger)}${bar('💗', '행복도', p.happy)}${bar('🫧', '청결도', p.clean)}${bar('⚡', '에너지', p.energy)}
+  <div class="row"><button class="btn o" data-a="feed">🍙 밥 주기</button><button class="btn o" data-a="play">🧸 놀아주기</button></div>
+  <div class="row"><button class="btn o" data-a="wash">🫧 씻기기</button><button class="btn o" data-a="sleep">${p.sleep ? '☀️ 깨우기' : '💤 재우기'}</button></div>
+  <div class="row"><button class="btn g" data-a="gift">🎁 오늘의 선물</button><button class="btn g" data-a="shop">👗 옷 입히기</button></div>
+  ${panel}<div id="pgame"></div>
+  ${(p.log || []).length ? `<div class="lbl">최근 소식</div>${p.log.map(x => `<div class="td">✨ ${esc(x.m)}</div>`).join('')}` : ''}
+  <div class="hd bl" style="margin-top:12px">펫 일기 <small>PET DIARY</small></div>${(p.diary || []).map(x => `<div class="post"><small>${esc(x.d)}</small><div class="pt">${esc(x.t)}</div></div>`).join('') || '<span style="color:#aaa">내일부터 일기를 써요</span>'}
+  <div class="hd bl" style="margin-top:12px">성장 앨범 <small>ALBUM</small></div><div class="opts">${(p.alb || []).map(a => `<div class="box" style="text-align:center;margin:0;width:92px"><div style="width:64px;margin:auto">${petSVG({ st: a.s, ty: p.ty, m: 'happy' })}</div><small>${PSTAGE[a.s]}<br>${esc(String(a.d).slice(5))}</small></div>`).join('')}</div>`);
+  $('#content').onclick = e => {
+    const a = e.target.closest('[data-a]'), fd = e.target.closest('[data-food]'), by = e.target.closest('[data-pbuy]');
+    const done = m => { p.exp = (p.exp || 0) + 1; saveRecord(); petPub(); fx(m); };
+    if (by) {
+      const x = PACC.find(v => v[0] === by.dataset.pbuy); p.accOwned = p.accOwned || [];
+      if (p.accOwned.includes(x[0])) p.accOn = p.accOn === x[0] ? '' : x[0];
+      else { if (record.acorns < x[3]) return toast('도토리가 부족해요 🌰'); if (!confirm(`${x[2]} (🌰${x[3]}) 살까요?`)) return; record.acorns -= x[3]; p.accOwned.push(x[0]); p.accOn = x[0]; toast(`${x[2]}을(를) 입혀 줬어요!`); }
+      saveRecord(); petPub(); tama(); return;
+    }
+    if (fd) {
+      const x = FOODS.find(v => v[0] === fd.dataset.food); if (p.sleep) return toast('쿨쿨 자는 중이에요 💤'); if (p.hunger > 92) return toast('배불러서 못 먹어요 🍙');
+      if (record.acorns < x[3]) return toast('도토리가 부족해요 🌰');
+      record.acorns -= x[3]; const fav = T.fav === x[0]; p.hunger = pClamp(p.hunger + x[4] * (fav ? 1.4 : 1)); p.happy = pClamp(p.happy + x[5] + (fav ? 8 : 0));
+      toast(fav ? '제일 좋아하는 간식이에요! 💗' : '냠냠 맛있어요!'); pPanel = ''; done('eat'); return;
+    }
+    if (!a) return; const k = a.dataset.a;
+    if (k === 'feed' || k === 'shop') { pPanel = pPanel === k ? '' : k; tama(); }
+    else if (k === 'play') petGame(p);
+    else if (k === 'wash') { if (p.sleep) return toast('쿨쿨 자는 중이에요 💤'); p.clean = pClamp(p.clean + 40); toast('뽀득뽀득 깨끗해졌어요 🫧'); done('happy'); }
+    else if (k === 'sleep') { p.sleep = !p.sleep; toast(p.sleep ? '쿨쿨… 잘 자요 💤' : '잘 잤어요! ☀️'); saveRecord(); petPub(); tama(); }
+    else if (k === 'gift') {
+      if (p.gdate === todayS()) return toast('오늘 선물은 이미 받았어요 🎁'); p.gdate = todayS(); const n = 1 + Math.floor(Math.random() * 3); record.acorns += n;
+      p.log = [{ t: nowMs(), m: `선물을 가져왔어요! 🌰+${n}` }, ...(p.log || [])].slice(0, 5); toast(`선물을 가져왔어요! 🌰+${n}`); done('happy');
+    }
+  };
+  petT = setInterval(() => { if (tab !== 'tama') return clearInterval(petT); const g = $('#pgame'); if (g && g.innerHTML) return; tama(); }, 30000);
+}
+function visitPet(p){
+  const q = p.pet; if (!q) return '';
+  return `<div class="hd bl" style="margin-top:10px">🐣 ${esc(q.n)} <small>${PSTAGE[q.st] || ''}${q.ty && PT[q.ty] ? ' · ' + PT[q.ty].n : ''}</small></div><div style="width:90px;margin:6px 0">${petSVG({ st: q.st, ty: q.ty, m: q.md, ac: q.ac })}</div>`;
+}
 /* ================= 쥬크박스 ================= */
 function juke(){
   profile.pl = profile.pl || [];
@@ -1556,6 +1765,7 @@ function visit(v){
   <div class="box" style="margin-top:10px"><div class="fl"><span>🎵 ${esc(p.bgm.title || (p.bgm.url ? '배경음악' : '노래 없음'))}</span>${p.bgm.url ? '<button class="btn sm" id="vb">이 노래 듣기</button>' : ''}</div>
   <div style="padding-top:6px">${esc(p.mood || '')} · ${esc(p.msg)}</div></div>
     ${visitPL(p)}
+    ${visitPet(p)}
   <div class="hd bl">${esc(p.name)}님의 다이어리</div><div id="vp" style="margin-top:6px">불러오는 중...</div>
     <div class="hd bl" style="margin-top:12px">${esc(p.name)}님의 방명록</div><div id="gb" style="margin-top:6px"></div>
     <div class="row"><button class="btn g" onclick="go('friends')">← 친구 목록</button><button class="btn o" onclick="wave()">🌊 파도타기</button></div>`);
