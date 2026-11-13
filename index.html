@@ -993,7 +993,7 @@ function chatStart(host){
   chatHost = host; chatLog = []; chatIdx = 0; chatSeen = new Set(); chatMine = []; chatFirst = true;
   let pk = ''; try { pk = localStorage.getItem('dt_sms') || ''; } catch (e) {}
   const old = $('#sms'); if (old) old.remove();
-  room.insertAdjacentHTML('afterend', `<div class="sms ${pk}" id="sms"><div class="smscr"><div class="smtop"><span>✉ 문자메시지</span><span id="smsN">0/0</span></div>
+  room.insertAdjacentHTML('afterend', `<div class="sms ${pk}" id="sms"><div class="smscr"><div class="smtop"><span>✉ 문자</span><span id="smsN">0/0</span></div>
     <div class="smfr" id="smsFrom">보낸사람 -</div><div class="smbd" id="smsBody"></div><div class="smtm" id="smsTime"></div>
     <div class="smks"><button id="smsPrev">◀ 이전</button><button id="smsSkin">🎨</button><button id="smsNext">다음 ▶</button></div></div>
     <div class="smwr"><input id="smsIn" maxlength="20" placeholder="머리 위에 띄울 문자 (20자)" autocomplete="off"><button class="smgo" id="smsGo">전송</button></div></div>`);
