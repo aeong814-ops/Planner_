@@ -1292,7 +1292,7 @@ function notePage(){
   noteBadge();
 }
  /* ================= 삐삐 ================= */
-const PAGER_CODES = {'486':'사랑해','1004':'천사','8282':'빨리빨리','1010235':'열렬히 사모','7942':'친구사이','337':'힘내! (짝짝짝)'};
+const PAGER_CODES = {'486':'사랑해','1004':'천사','8282':'빨리빨리','1010235':'열렬히 사모','7942':'친구사이','337':'힘내! (짝짝짝)','777':'행운을 빌어요','8578':'바로출발','911':'긴급출동','981':'급한일','0024':'영원히 사랑해'};
 let pgBuf = '', pgTo = '';
 function beep(f, d){
   try { const a = beep.a || (beep.a = new (window.AudioContext || window.webkitAudioContext)()), o = a.createOscillator(), g = a.createGain(); o.frequency.value = f || 880; g.gain.value = .04; o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + (d || .06)); } catch (e) {}
