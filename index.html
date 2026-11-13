@@ -143,6 +143,14 @@ input.f,textarea.f{width:100%;padding:8px;border:1px solid var(--line);border-ra
 .si .e img{width:56px;height:56px;object-fit:contain}
  #pop{position:fixed;right:14px;top:14px;background:#fff;border:2px solid var(--line);border-radius:10px;padding:8px 12px;z-index:98;box-shadow:0 3px 10px #0003;max-width:240px;display:none}
 .scr{position:relative;width:220px;height:90px;margin:8px auto}.scr canvas{position:absolute;left:0;top:0;width:220px;height:90px;touch-action:none;border-radius:8px}.scr .prize{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;background:#fff7d6;border-radius:8px}
+.pgr{width:270px;max-width:100%;margin:10px auto;padding:16px 14px 12px;border-radius:22px;background:linear-gradient(135deg,#8fe0d8,#2c9aa0 60%,#1f7f86);box-shadow:inset 0 0 0 3px #ffffff55,0 6px 14px #0004}
+.pgr .lcd{background:#b9c4ae;border:3px solid #6f7a66;border-radius:6px;padding:6px 8px;font-family:monospace;color:#2b3328;min-height:70px}
+.pgr .lcd b{display:block;font-size:24px;letter-spacing:2px;word-break:break-all}
+.pgr .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.pgr .keys button{padding:12px 0;border:0;border-radius:16px;background:#f5f7f4;font-size:18px;cursor:pointer;box-shadow:0 2px 0 #0003}
+.pgr .keys button:active{transform:translateY(2px);box-shadow:none}
+.pgr .brand{color:#fff;font-size:11px;text-align:center;margin-top:8px;letter-spacing:1px}
+
 @media(max-width:860px){
  .book{grid-template-columns:1fr}.title{grid-column:1}.ring{display:none}
  .left{min-height:0}.tabs{flex-direction:row;flex-wrap:wrap;margin:0;order:-1;grid-column:1}
@@ -295,7 +303,7 @@ const MOODS = ['😊 기분 좋음','📚 열공 중','😴 졸려요','😭 시
 const SKINS = ['#ffe6d5','#fbd5bd','#eebb98','#c98f66'];
 const HAIRS = ['#2a2224','#4a342e','#7a5444','#a9805f','#e6cf9f','#f5ecd2','#e58b4a','#c0272d','#d9899f','#a8d8ee','#c4b5ee','#2b3a6b'];
 const EYES = ['#3a2a2a','#7a5a3a','#5f8a4a','#6f7f95'];
-const HAIRSTYLES = [['long','생머리'],['wavy','웨이브'],['bob','단발'],['twin','양갈래'],['bun','똥머리'],['pony','포니테일'],['buns','양쪽 똥머리'],['braid','땋은 머리'],['short','짧은머리(남)'],['spiky','삐죽머리(남)'],['curly','곱슬머리(남)']];
+const HAIRSTYLES = [['long','생머리'],['wavy','웨이브'],['bob','단발'],['twin','양갈래'],['bun','똥머리'],['pony','포니테일'],['buns','양쪽 똥머리'],['braid','땋은 머리'],['hime','히메컷'],['layered','레이어드'],['halfup','반묶음'],['semi','중단발 C컬'],['sidebraid','옆 땋은머리'],['lowpony','낮은 포니'],['short','짧은머리(남)'],['spiky','삐죽머리(남)'],['curly','곱슬머리(남)'],['dandy','댄디컷(남)'],['comma','쉼표머리(남)'],['medium','미디엄컷(남)'],['fluffy','볼륨펌(남)'],['sport','스포츠컷(남)'],['slick','올백(남)']];
 const BANGS = [['full','앞머리'],['part','가르마'],['none','넘김']];
 const HATS = [['none','없음'],['band','머리띠'],['phones','헤드폰'],['earm','귀마개'],['beret','베레모'],['ribbon','리본'],['sprout','새싹']];
 const HATC = ['#f7f0dc','#2b2a2e','#c2262e','#b7a8e6','#f2a9bd','#ffffff'];
@@ -321,9 +329,31 @@ const OUTFITS = [
  {n:'흰 티 슬랙스',p:0,k:'pants',top:'#ffffff',pants:'#3d3f4a',shoe:'#2b2a2e'},
  {n:'남자 교복',p:4,k:'pants',top:'#ffffff',cardi:'#2b3159',pants:'#2b3159',shirt:'#ffffff',bow:'#c9302f',shoe:'#2b2a2e'},
  {n:'카키 가디건',p:4,k:'pants',top:'#f4e8d2',cardi:'#8a9a5b',pants:'#d9c9a8',shoe:'#8c6b4a'}
+ ,{n:'니트 베스트',p:4,k:'skirt',top:'#f3ead8',shirt:'#ffffff',collar:'#ffffff',skirt:'#e9dfc9',sock:'#ffffff',shoe:'#7a4f33'},
+ {n:'베이지 재킷 원피스',p:4,k:'dress',top:'#f4efe4',cardi:'#b79a68',skirt:'#f4efe4',scarf:'#f7f1e4',sock:'#e9dfc9',shoe:'#b79a68'},
+ {n:'핑크 프릴 원피스',p:4,k:'dress',top:'#f6b9c8',skirt:'#f6b9c8',sleeve:'#ffffff',collar:'#ffffff',trim:'#ffffff',bow:'#4a9a8a',sock:'#ffffff',shoe:'#fbe3e8'},
+ {n:'파스텔 후드 스커트',p:4,k:'skirt',top:'#f7d3dc',pocket:'#eec2cc',skirt:'#f4ead3',trim:'#f4ead3',sock:'#ffffff',shoe:'#bcd7f2'},
+ {n:'블랙 레이스 원피스',p:5,k:'dress',top:'#2a2830',skirt:'#2a2830',collar:'#ffffff',bow:'#ffffff',sock:'#3b3b44',shoe:'#4a3a32'},
+ {n:'크림 가디건 데님스커트',p:4,k:'skirt',top:'#f6efdf',cardi:'#f3e8cf',skirt:'#2f4a7a',trim:'#2f4a7a',sock:'#ffffff',shoe:'#ffffff'},
+ {n:'화이트 후드 집업',p:4,k:'dress',top:'#ffffff',skirt:'#ffffff',pocket:'#e8ecf2',trim:'#e8ecf2',sock:'#ffffff',shoe:'#ffffff'},
+ {n:'베이지 코트',p:5,k:'dress',top:'#d8c3a0',cardi:'#d8c3a0',skirt:'#d8c3a0',scarf:'#f4ead3',sock:'#c9b08a',shoe:'#2b2a2e'},
+ {n:'셔츠 반바지 타이',p:4,k:'shorts',top:'#ffffff',tie:'#2b2a30',pants:'#2b2a30',sock:'#2b2a30',shoe:'#2b2a30'},
+ {n:'블랙 스커트 타이',p:4,k:'skirt',top:'#ffffff',tie:'#2b2a30',skirt:'#2b2a30',sock:'#2b2a30',shoe:'#2b2a30'},
+ {n:'블랙 재킷 셋업',p:5,k:'skirt',top:'#ffffff',cardi:'#2b2a30',skirt:'#2b2a30',sock:'#2b2a30',shoe:'#2b2a30'},
+ {n:'블랙 조끼 반바지',p:5,k:'shorts',top:'#ffffff',cardi:'#2b2a30',pants:'#2b2a30',sock:'#2b2a30',shoe:'#2b2a30'},
+ {n:'올블랙 후드 원피스',p:5,k:'dress',top:'#2b2a30',skirt:'#2b2a30',pocket:'#3a3944',sock:'#2b2a30',shoe:'#2b2a30'},
+ {n:'블랙 후드 찢청',p:4,k:'pants',top:'#2a2a2e',pocket:'#3a3a40',pants:'#2f343c',rip:1,shoe:'#ffffff'},
+ {n:'스트라이프 니트 청바지',p:4,k:'pants',top:'#2f3a63',stripe:'#e8ecf2',pants:'#41607f',rip:1,shoe:'#ffffff'},
+ {n:'노랑 맨투맨 반바지',p:4,k:'shorts',top:'#f0b429',pants:'#b89e78',sock:'#ffffff',shoe:'#2b2a2e'},
+ {n:'크림 셔츠 연청',p:4,k:'pants',top:'#ffffff',cardi:'#f1e7d0',pants:'#a9cde0',shoe:'#ffffff'},
+ {n:'와인 재킷 데님',p:5,k:'pants',top:'#ffffff',cardi:'#4a2c32',pants:'#4f6f8f',rip:1,shoe:'#2b2a2e'},
+ {n:'핑크 소매 반바지',p:4,k:'shorts',top:'#ffffff',sleeve:'#f7c8d3',pants:'#bcd9dd',sock:'#ffffff',shoe:'#ffffff'},
+ {n:'하늘 후드 팬츠',p:4,k:'pants',top:'#c9dff2',pocket:'#b4cfe6',pants:'#c3dde0',shoe:'#7a5a3a'},
+ {n:'블랙 니트 데님',p:4,k:'pants',top:'#27322f',pants:'#39587a',shoe:'#5a5a3a'}
 ];
+
 /* 가격: 0 = 기본 무료, 나머지는 도토리로 구입 */
-const PRICE = {hs:{short:0,spiky:2,curly:3,long:0,wavy:0,bob:0,twin:2,bun:3,pony:3,buns:4,braid:4},hat:{none:0,band:0,phones:3,earm:3,sprout:3,beret:4,ribbon:4},clip:{none:0,heart:0,bow:2,star:2,berry:3,clover:3},glasses:{1:2},bear:{1:4},bunny:{1:5}};
+const PRICE = hs:{short:0,spiky:2,curly:3,long:0,wavy:0,bob:0,twin:2,bun:3,pony:3,buns:4,braid:4,hime:3,layered:3,halfup:3,semi:3,sidebraid:4,lowpony:3,dandy:2,comma:3,medium:3,fluffy:4,sport:0,slick:3},hat:{none:0,band:0,phones:3,earm:3,sprout:3,beret:4,ribbon:4},clip:{none:0,heart:0,bow:2,star:2,berry:3,clover:3},glasses:{1:2},bear:{1:4},bunny:{1:5}};
 const priceOf = (k, v) => k === 'outfit' ? OUTFITS[v].p : k === 'hair' ? (HAIRS.indexOf(v) < 3 ? 0 : 2) : ((PRICE[k] && PRICE[k][v]) || 0);
 const CW = 48, CH = 76;
 const hx = h => [1,3,5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -385,6 +415,23 @@ function charSVG(raw){
   } else if (c.hs === 'curly') {
     for (let t = 190; t <= 350; t += 18) { const r = t * Math.PI / 180; E(CX + 16.5 * Math.cos(r), 29 + 15.5 * Math.sin(r), 3, 3, H); }
   }
+    if (c.hs === 'hime' || c.hs === 'layered' || c.hs === 'halfup') {
+    for (let y = 30; y <= 58; y++) { let l = 7, r = 40; if (c.hs === 'layered' && y > 46) { const k = [0, 1, 2, 1][y % 4]; l += k; r -= k; } if (y > 52) { const k = Math.round((y - 52) * .7); l += k; r -= k; } R(l, y, r, y, H); }
+    if (c.hs === 'halfup') { E(CX, 12, 4, 3.4, H); P(23, 15, '#f58aa5'); P(24, 15, '#f58aa5'); }
+  } else if (c.hs === 'semi') {
+    for (let y = 30; y <= 52; y++) { let l = 7, r = 40; if (y > 45) { const k = Math.round((y - 45) * 1.1); l += k; r -= k; } R(l, y, r, y, H); }
+  } else if (c.hs === 'sidebraid') {
+    for (let y = 30; y <= 50; y++) R(7, y, 40, y, H);
+  } else if (c.hs === 'lowpony') {
+    for (let y = 40; y <= 62; y++) { const x = 37 + Math.round(2 * Math.sin((y - 40) * .15)), hw = 3.2 - (y - 40) * .04; R(Math.round(x - hw), y, Math.round(x + hw), y, H); }
+    R(36, 41, 39, 43, '#f58aa5');
+  } else if (c.hs === 'medium') {
+    R(8, 30, 39, 49, H);
+  } else if (c.hs === 'fluffy') {
+    E(CX, 22, 18, 14, H); R(6, 24, 41, 38, H);
+  } else if (c.hs === 'dandy') {
+    E(CX, 19, 15.5, 9, H);
+  }
   for (let y = 36; y < CH; y++) for (let x = 0; x < CW; x++) if (g[y][x] === H && x % 5 === 2) g[y][x] = Hd;
 
   /* 2. 다리, 신발 */
@@ -392,9 +439,9 @@ function charSVG(raw){
   MR(18, 69, 22, 71, o.shoe); P(18, 71, null); P(29, 71, null);
   /* 3. 몸 */
   R(21, 43, 26, 45, S);
-  if (o.k === 'pants') {
+    if (o.k === 'pants' || o.k === 'shorts') {
     R(16, 45, 31, 57, o.top); P(16, 45, null); P(31, 45, null);
-    MR(18, 58, 22, 68, o.pants); R(23, 58, 24, 61, o.pants); R(18, 58, 29, 59, darken(o.pants, .12));
+        MR(18, 58, 22, o.k === 'shorts' ? 62 : 68, o.pants); R(23, 58, 24, 61, o.pants); R(18, 58, 29, 59, darken(o.pants, .12));
   } else {
     R(16, 45, 31, 56, o.top); P(16, 45, null); P(31, 45, null);
     R(16, 56, 31, 56, darken(o.top, .08));
@@ -411,13 +458,18 @@ function charSVG(raw){
    if (o.cardi) { R(16, 45, 19, 56, o.cardi); R(28, 45, 31, 56, o.cardi); P(16, 45, null); P(31, 45, null); }
   if (o.scarf) { R(19, 44, 28, 46, o.scarf); R(20, 47, 22, 52, o.scarf); R(21, 52, 22, 52, darken(o.scarf, .1)); }
   if (o.shirt) for (let i = 0; i < 3; i++) R(21 + i, 45 + i, 26 - i, 45 + i, o.shirt);
+  if (o.stripe) for (let y = 47; y <= 55; y += 3) R(16, y, 31, y, o.stripe);
+  if (o.pocket) R(19, 52, 28, 55, o.pocket);
+  if (o.tie) { R(23, 46, 24, 48, o.tie); R(23, 49, 24, 53, o.tie); }
+
   if (o.collar) { R(20, 45, 27, 46, o.collar); P(23, 45, S); P(24, 45, S); P(23, 46, S); P(24, 46, S); }
   if (o.bow) { P(21, 47, o.bow); P(26, 47, o.bow); R(22, 47, 25, 48, o.bow); P(23, 49, o.bow); P(24, 49, o.bow); }
   MR(12, 46, 15, 54, o.sleeve || o.cardi || o.top); MR(12, 55, 14, 57, S);
-  if (c.hs === 'braid') for (const s of [-1, 1]) for (let y = 44; y <= 64; y++) { const cx = CX + s * 12.5 + (y % 6 < 3 ? 0 : s), col = Math.floor((y - 44) / 3) % 2 ? Hd : H; R(Math.round(cx - 1.5), y, Math.round(cx + 1.5), y, y > 62 ? '#f58aa5' : col); }
+    for (const s of (c.hs === 'braid' ? [-1, 1] : c.hs === 'sidebraid' ? [-1] : [])) for (let y = 44; y <= 64; y++) { const cx = CX + s * 12.5 + (y % 6 < 3 ? 0 : s), col = Math.floor((y - 44) / 3) % 2 ? Hd : H; R(Math.round(cx - 1.5), y, Math.round(cx + 1.5), y, y > 62 ? '#f58aa5' : col); }
   /* 4. 얼굴 */
   E(CX, 30, 14.5, 13, S);
-  const bl = mix(S, '#ff8fa0', ['short', 'spiky', 'curly'].includes(c.hs) ? .25 : .55);
+  const bl = mix(S, '#ff8fa0', ['short', 'spiky', 'curly', 'dandy', 'comma', 'medium', 'fluffy', 'sport', 'slick'].includes(c.hs)
+ ? .25 : .55);
   MR(12, 36, 15, 37, bl);
   const dark = '#3b2a2c';
   if (c.shut) { M(15, 34, dark); M(16, 33, dark); M(17, 33, dark); M(18, 34, dark); }
@@ -435,7 +487,7 @@ function charSVG(raw){
     if (c.bang === 'full') v = 29 + (d > 9.5 ? (d - 9.5) * 3.6 : 0) - ((x === 20 || x === 27) ? 1 : 0);
     else if (c.bang === 'part') v = 22 + d * .85 + (d > 10 ? (d - 10) * 3 : 0);
     else v = 18 + d * .5 + (d > 11 ? (d - 11) * 5 : 0);
-            return Math.min(v, ({ short: 33, spiky: 33, curly: 34 })[c.hs] || (['bob', 'twin', 'pony', 'buns'].includes(c.hs) ? 42 : 46));
+            return Math.min(v, ({ short: 33, spiky: 33, curly: 34, dandy: 33, comma: 33, fluffy: 34, medium: 42, sport: 28, slick: 25 })[c.hs] || (['bob', 'twin', 'pony', 'buns'].includes(c.hs) ? 42 : 46));
   };
   for (let y = 13; y <= 46; y++) for (let x = 6; x <= 41; x++) {
     const dx = (x - CX) / 16.2, dy = (y - 29.5) / 15.2;
@@ -443,6 +495,9 @@ function charSVG(raw){
   }
   for (let x = 14; x <= 33; x++) { const y = 19 + Math.round(Math.pow((x - CX) / 10, 2) * 3); if (at(x, y) === H) P(x, y, Hl); }
   if (c.bang === 'part') for (let y = 15; y <= 20; y++) if (at(23, y) === H || at(24, y) === H) { P(23, y, Hd); P(24, y, Hd); }
+    if (c.hs === 'hime') MR(8, 31, 10, 49, H);
+  if (c.hs === 'comma') for (let y = 33; y <= 36; y++) R(20 - (y - 33), y, 22, y, H);
+
 
   /* 6. 모자/핀 */
   const WH = '#ffffff', WS = '#d7dce3';
@@ -660,14 +715,14 @@ function logout(){ stopBGM(); localStorage.removeItem('dt:session'); location.re
 })();
 
 /* ================= 공통 화면 ================= */
-const TABS = [['home','홈'],['diary','계획표'],['cal','달력'],['story','다이어리'],['guest','방명록'],['album','사진첩'],['juke','쥬크박스'],['note','우체통'],
+const TABS = [['home','홈'],['diary','계획표'],['cal','달력'],['story','다이어리'],['guest','방명록'],['album','사진첩'],['juke','쥬크박스'],['note','우체통'],['pager','삐삐'],
 ['play','놀이터'],['decor','방꾸미기'],['friends','친구'],['prof','프로필']];
 function go(t, arg){
    stopWatch();
   if (visiting && t !== 'visit') { visiting = null; if (playing) startBGM(profile.bgm); else { curBGM = profile.bgm; updatePlayer(); } }
   tab = t; if (t === 'visit') visiting = arg;
   window.scrollTo({ top: 0 });
-  renderShell(); ({ home, diary, cal, story, guest, album, juke, play, decor, friends, prof, visit, note: notePage })[t](arg);
+  renderShell(); ({ home, diary, cal, story, guest, album, juke, play, decor, friends, prof, visit, note: notePage, pager: pagerPage })[t](arg);
 }
 function renderShell(){
   const p = visiting?.profile || profile;
@@ -1171,7 +1226,7 @@ async function claimNotes(){
     record.inbox = record.inbox || []; let got = 0;
     for (const id of ids) {
       const g = await DB.get('note', id); await DB.del('note', id);
-      if (g && ['friend', 'cmt', 'guest'].includes(g.t) && g.from) { record.inbox.unshift({ id: rid(), t: g.t, from: String(g.from).slice(0, 20), text: String(g.text || '').slice(0, 60), ts: +g.ts || Date.now() }); got++; }
+      if (g && ['friend', 'cmt', 'guest', 'pager'].includes(g.t) && g.from) { record.inbox.unshift({ id: rid(), t: g.t, from: String(g.from).slice(0, 20), text: g.t === 'pager' ? String(g.text || '').replace(/[^0-9*#]/g, '').slice(0, 16) : String(g.text || '').slice(0, 60),ts: +g.ts || Date.now() }); got++; }
     }
     if (got) { record.inbox.splice(50).forEach(x => { if (x.gi) DB.del('gimg', x.gi).catch(() => {}); }); saveRecord(); noteBadge(); popup(`💌 우체통에 새 편지가 ${got}통 도착했어요!`); }
   } catch (e) {}
@@ -1207,6 +1262,7 @@ function giftUI(){
 }
 function letterBody(x){
   if (x.t === 'gift') return `🎁 도토리 <b>${x.n}</b>개가 들어 있어요!${x.msg ? `<br><span style="color:#888">💌 “${esc(x.msg)}”</span>` : ''}${x.gi ? `<br><img data-gi="${esc(x.gi)}" style="display:none;max-width:140px;max-height:140px;border-radius:8px;margin-top:4px;cursor:pointer">` : ''}`;
+  if (x.t === 'pager') return `📟 삐삐가 왔어요<br><b style="font-family:monospace;letter-spacing:2px;font-size:18px">${esc(x.text)}</b>${PAGER_CODES[x.text] ? ` <small style="color:#888">(${esc(PAGER_CODES[x.text])})</small>` : ''}`;
   if (x.t === 'cmt') return `💬 내 다이어리 글에 댓글을 남겼어요<br><span style="color:#888">“${esc(x.text)}”</span>`;
   if (x.t === 'guest') return `📖 내 방명록에 글을 남겼어요<br><span style="color:#888">“${esc(x.text)}”</span>`;
   return `👋 일촌 신청이에요!${record.friends.includes(x.from) ? ' (이미 일촌이에요 💞)' : `<br><button class="btn o sm" data-ac="${esc(x.from)}" style="margin-top:4px">일촌 맺기</button>`}`;
@@ -1237,7 +1293,44 @@ function notePage(){
   };
   noteBadge();
 }
- 
+ /* ================= 삐삐 ================= */
+const PAGER_CODES = {'486':'사랑해','1004':'천사','8282':'빨리빨리','1010235':'열렬히 사모','7942':'친구사이','337':'힘내! (짝짝짝)'};
+let pgBuf = '', pgTo = '';
+function beep(f, d){
+  try { const a = beep.a || (beep.a = new (window.AudioContext || window.webkitAudioContext)()), o = a.createOscillator(), g = a.createGain(); o.frequency.value = f || 880; g.gain.value = .04; o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + (d || .06)); } catch (e) {}
+}
+function pagerPage(){
+  record.inbox = record.inbox || [];
+  if (!record.friends.includes(pgTo)) pgTo = record.friends[0] || '';
+  const rec = record.inbox.filter(x => x.t === 'pager').slice(0, 8);
+  C(`<h3 class="sec hd">삐삐 📟</h3>
+  <p style="color:#888;line-height:1.6;margin:0 0 6px">숫자만 눌러서 친구에게 삐삐를 쳐요. 받은 삐삐는 우체통에도 편지로 도착해요.</p>
+  ${record.friends.length ? `<div class="pgr">
+    <div class="lcd"><small id="pgTo"></small><b id="pgBuf"></b><small id="pgMean"></small></div>
+    <div class="keys">${[1,2,3,4,5,6,7,8,9,'*',0,'#'].map(k => `<button data-k="${k}">${k}</button>`).join('')}
+      <button data-k="del">⌫</button><button data-k="clr">C</button><button data-k="send" style="background:#ffe08a;font-size:15px">전송</button></div>
+    <div class="brand">☎ DOTORI PAGER</div></div>
+  <div class="row" style="max-width:300px;margin:8px auto"><select class="f" id="pgSel" style="margin:0;width:100%;padding:8px;border:1px solid var(--line);border-radius:8px">${record.friends.map(f => `<option value="${esc(f)}" ${f === pgTo ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select></div>
+  <div class="opts" style="justify-content:center;margin-bottom:10px">${Object.entries(PAGER_CODES).map(([k, v]) => `<button class="btn g sm" data-q="${k}">${k} · ${esc(v)}</button>`).join('')}</div>` : '<p style="color:#aaa">먼저 친구를 추가해 보세요</p>'}
+  <div class="hd bl">받은 삐삐</div>
+  <div class="pgr" style="margin-top:8px"><div class="lcd" style="min-height:40px">${rec.map(x => `<div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(x.from)}</span><b style="font-size:16px">${esc(x.text)}</b></div>${PAGER_CODES[x.text] ? `<small>→ ${esc(PAGER_CODES[x.text])}</small>` : ''}`).join('') || '<small>받은 삐삐가 없어요</small>'}</div></div>`);
+  const lcd = () => { const t = $('#pgTo'); if (!t) return; t.textContent = pgTo ? `TO ${pgTo}` : ''; $('#pgBuf').textContent = pgBuf || '_'; $('#pgMean').textContent = PAGER_CODES[pgBuf] ? `→ ${PAGER_CODES[pgBuf]}` : ' '; };
+  lcd();
+  const sel = $('#pgSel'); if (sel) sel.onchange = () => { pgTo = sel.value; lcd(); };
+  $('#content').onclick = e => {
+    const k = e.target.closest('[data-k]'), q = e.target.closest('[data-q]');
+    if (q) { pgBuf = q.dataset.q; beep(1000); lcd(); return; }
+    if (!k) return; const v = k.dataset.k;
+    if (v === 'del') { pgBuf = pgBuf.slice(0, -1); beep(600); }
+    else if (v === 'clr') { pgBuf = ''; beep(600); }
+    else if (v === 'send') {
+      if (!pgTo) return toast('받을 친구를 골라 주세요'); if (!pgBuf) return toast('숫자를 먼저 눌러 주세요');
+      sendMail(pgTo, { t: 'pager', text: pgBuf }); beep(1200, .15); toast(`${pgTo}님께 삐삐를 쳤어요 📟`); pgBuf = '';
+    } else if (pgBuf.length < 16) { pgBuf += v; beep(800 + (v === '*' || v === '#' ? 0 : +v * 40)); }
+    lcd();
+  };
+}
+
 /* ================= 쥬크박스 ================= */
 function juke(){
   profile.pl = profile.pl || [];
