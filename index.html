@@ -303,7 +303,7 @@ const MOODS = ['😊 기분 좋음','📚 열공 중','😴 졸려요','😭 시
 const SKINS = ['#ffe6d5','#fbd5bd','#eebb98','#c98f66'];
 const HAIRS = ['#2a2224','#4a342e','#7a5444','#a9805f','#e6cf9f','#f5ecd2','#e58b4a','#c0272d','#d9899f','#a8d8ee','#c4b5ee','#2b3a6b'];
 const EYES = ['#3a2a2a','#7a5a3a','#5f8a4a','#6f7f95'];
-const HAIRSTYLES = [['long','생머리'],['wavy','웨이브'],['bob','단발'],['twin','양갈래'],['bun','똥머리'],['pony','포니테일'],['buns','양쪽 똥머리'],['braid','땋은 머리'],['hime','히메컷'],['layered','레이어드'],['halfup','반묶음'],['semi','중단발 C컬'],['sidebraid','옆 땋은머리'],['lowpony','낮은 포니'],['short','짧은머리(남)'],['spiky','삐죽머리(남)'],['curly','곱슬머리(남)'],['dandy','댄디컷(남)'],['comma','쉼표머리(남)'],['medium','미디엄컷(남)'],['fluffy','볼륨펌(남)'],['sport','스포츠컷(남)'],['slick','올백(남)']];
+const HAIRSTYLES = [['long','생머리'],['wavy','웨이브'],['bob','단발'],['twin','양갈래'],['bun','똥머리'],['pony','포니테일'],['buns','양쪽 똥머리'],['braid','땋은 머리'],['hime','히메컷'],['layered','레이어드'],['halfup','반묶음'],['semi','중단발 C컬'],['sidebraid','옆 땋은머리'],['lowpony','낮은 포니'],['short','짧은머리'],['spiky','삐죽머리'],['curly','곱슬머리'],['dandy','댄디컷'], ['medium','미디엄컷'],['fluffy','볼륨펌'],['sport','스포츠컷'],['slick','올백']];
 const BANGS = [['full','앞머리'],['part','가르마'],['none','넘김']];
 const HATS = [['none','없음'],['band','머리띠'],['phones','헤드폰'],['earm','귀마개'],['beret','베레모'],['ribbon','리본'],['sprout','새싹']];
 const HATC = ['#f7f0dc','#2b2a2e','#c2262e','#b7a8e6','#f2a9bd','#ffffff'];
@@ -353,7 +353,7 @@ const OUTFITS = [
 ];
 
 /* 가격: 0 = 기본 무료, 나머지는 도토리로 구입 */
-const PRICE = {hs:{short:0,spiky:2,curly:3,long:0,wavy:0,bob:0,twin:2,bun:3,pony:3,buns:4,braid:4,hime:3,layered:3,halfup:3,semi:3,sidebraid:4,lowpony:3,dandy:2,comma:3,medium:3,fluffy:4,sport:0,slick:3},hat:{none:0,band:0,phones:3,earm:3,sprout:3,beret:4,ribbon:4},clip:{none:0,heart:0,bow:2,star:2,berry:3,clover:3},glasses:{1:2},bear:{1:4},bunny:{1:5}};
+const PRICE = {hs:{short:0,spiky:2,curly:3,long:0,wavy:0,bob:0,twin:2,bun:3,pony:3,buns:4,braid:4,hime:3,layered:3,halfup:3,semi:3,sidebraid:4,lowpony:3,dandy:2,medium:3,fluffy:4,sport:0,slick:3},hat:{none:0,band:0,phones:3,earm:3,sprout:3,beret:4,ribbon:4},clip:{none:0,heart:0,bow:2,star:2,berry:3,clover:3},glasses:{1:2},bear:{1:4},bunny:{1:5}};
 const priceOf = (k, v) => k === 'outfit' ? OUTFITS[v].p : k === 'hair' ? (HAIRS.indexOf(v) < 3 ? 0 : 2) : ((PRICE[k] && PRICE[k][v]) || 0);
 const CW = 48, CH = 76;
 const hx = h => [1,3,5].map(i => parseInt(h.slice(i, i + 2), 16));
