@@ -1277,19 +1277,21 @@ function wave(){
   if (!c.length) return toast('먼저 친구를 추가해 보세요');
   toast('🌊 파도타는 중...'); goVisit(c[Math.floor(Math.random() * c.length)]);
 }
-let onT = null; const online = {};
+let onT = null, onN = 0; const online = {};
 function startPresence(){
-    clearInterval(onT);
+  clearInterval(onT); onN = 0;
   const tick = async () => {
     if (!me || !record) return;
-           claimGifts(); claimNotes();
-    try { await DB.set('pres', me, { t: Date.now() }); } catch (e) {}
-    for (const f of record.friends) {
-      try { const d = await DB.get('pres', f), on = !!d && Date.now() - d.t < 75000; if (on && !online[f]) popup(`💌 ${f}님이 접속했어요!`); online[f] = on; } catch (e) {}
-    }
+    if (onN++ % 3 === 0) { claimGifts(); claimNotes(); }
+    try {
+      const vs = await loadVisitors(me), now = {};
+      vs.forEach(v => { now[v.id] = 1; if (!online[v.id]) popup(`💌 ${v.name || v.id}님이 내 방에 놀러 왔어요!`); });
+      Object.keys(online).forEach(k => delete online[k]); Object.assign(online, now);
+    } catch (e) {}
   };
-    tick(); onT = setInterval(tick, 30000);
+  tick(); onT = setInterval(tick, 10000);
 }
+
 function play(){
   const td = todayS(), L = record.lotto && record.lotto.d === td ? record.lotto : null;
   const lot = !L ? '<p style="color:#888">하루에 한 번, 복권을 받아서 긁어 보세요!</p><button class="btn o" id="lg">복권 받기 🎫</button>'
