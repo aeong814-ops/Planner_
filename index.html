@@ -165,7 +165,8 @@ input.f,textarea.f{width:100%;padding:8px;border:1px solid var(--line);border-ra
 .sms .smwr{display:flex;gap:6px;margin-top:8px}
 .sms .smwr input{flex:1;min-width:0;margin:0;padding:6px 8px;border:2px solid #5b6c9a;background:#f4f9ff;border-radius:4px;font-size:16px}
 .sms .smwr .smgo{flex:0 0 auto;border:2px solid #26335c;background:#ffd84a;border-radius:4px;padding:4px 12px;color:#26335c;font-size:15px}
-.sms.pk{background:linear-gradient(#ffd6e6,#f7a8c8);border-color:#c0538a;box-shadow:0 4px 0 #8f3563}
+.sms .smks input[type=color]{width:34px;height:26px;padding:0;border:2px solid #26335c;border-radius:6px;background:none;cursor:pointer}
+ .sms.pk{background:linear-gradient(#ffd6e6,#f7a8c8);border-color:#c0538a;box-shadow:0 4px 0 #8f3563}
 .sms.pk .smscr{background:radial-gradient(#ffc3da 22%,transparent 24%) 0 0/12px 12px,#ffe3ee;border-color:#e06fa3;color:#7a2b50}
 .sms.pk .smtop{background:#ef6fa5}
 .sms.pk .smfr{border-color:#e9a0c0}
@@ -988,6 +989,14 @@ async function sendChat(){
   try { await DB.set('rchat', key, { from: me, name: profile.name, text, ts: Date.now() }); chatMine.push(key); chatSeen.add(key); addChat({ from: me, name: profile.name, text, ts: Date.now() }); }
   catch (e) { toast('연결 오류'); }
 }
+ function smsColor(c){
+  const s = $('#sms'); if (!s) return;
+  const q = (x, css) => { const e = s.querySelector(x); if (e) Object.assign(e.style, css); };
+  if (!c) { s.removeAttribute('style'); q('.smscr', { background: '', borderColor: '' }); q('.smtop', { background: '' }); q('.smks', { background: '' }); return; }
+  s.style.background = `linear-gradient(${lighten(c, .3)},${c})`; s.style.borderColor = darken(c, .45); s.style.boxShadow = `0 4px 0 ${darken(c, .6)}`;
+  q('.smscr', { background: lighten(c, .75), borderColor: darken(c, .25) }); q('.smtop', { background: darken(c, .3) }); q('.smks', { background: lighten(c, .85) });
+}
+
 function chatStart(host){
   chatStop(); const room = $('#room'); if (!room) return;
   chatHost = host; chatLog = []; chatIdx = 0; chatSeen = new Set(); chatMine = []; chatFirst = true;
@@ -995,12 +1004,16 @@ function chatStart(host){
   const old = $('#sms'); if (old) old.remove();
   room.insertAdjacentHTML('afterend', `<div class="sms ${pk}" id="sms"><div class="smscr"><div class="smtop"><span>✉ 문자</span><span id="smsN">0/0</span></div>
     <div class="smfr" id="smsFrom">보낸사람 -</div><div class="smbd" id="smsBody"></div><div class="smtm" id="smsTime"></div>
-    <div class="smks"><button id="smsPrev">◀ 이전</button><button id="smsSkin">🎨</button><button id="smsNext">다음 ▶</button></div></div>
+    <div class="smks"><button id="smsPrev">◀ 이전</button><button id="smsSkin">🎨</button><input type="color" id="smsCol" value="#9fb0d3" title="폰 색깔">
+<button id="smsNext">다음 ▶</button></div></div>
     <div class="smwr"><input id="smsIn" maxlength="20" placeholder="머리 위에 띄울 문자 (20자)" autocomplete="off"><button class="smgo" id="smsGo">전송</button></div></div>`);
   $('#smsPrev').onclick = () => { if (chatIdx > 0) { chatIdx--; smsRender(); } };
-  $('#smsNext').onclick = () => { if (chatIdx < chatLog.length - 1) { chatIdx++; smsRender(); } };
-  $('#smsSkin').onclick = () => { const s = $('#sms'); s.classList.toggle('pk'); try { localStorage.setItem('dt_sms', s.classList.contains('pk') ? 'pk' : ''); } catch (e) {} };
-  $('#smsGo').onclick = sendChat;
+  $('#smsNext').onclick = () => { if (chatIdx < chatLog.length - 1) { chatIdx++;   $('#smsSkin').onclick = () => { const s = $('#sms'); smsColor(''); try { localStorage.removeItem('dt_smc'); } catch (e) {} s.classList.toggle('pk');
+ try { localStorage.setItem('dt_sms', s.classList.contains('pk') ? 'pk' : ''); } catch (e) {} };
+    let mc = ''; try { mc = localStorage.getItem('dt_smc') || ''; } catch (e) {}
+  if (mc) { $('#smsCol').value = mc; smsColor(mc); }
+  $('#smsCol').oninput = e => { smsColor(e.target.value); try { localStorage.setItem('dt_smc', e.target.value); } catch (er) {} };
+ $('#smsGo').onclick = sendChat;
   $('#smsIn').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); sendChat(); } };
   smsRender(); pollChat(host); chatT = setInterval(() => pollChat(host), 2500);
 }
