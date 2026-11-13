@@ -1007,9 +1007,8 @@ function chatStart(host){
     <div class="smks"><button id="smsPrev">◀ 이전</button><button id="smsSkin">🎨</button><input type="color" id="smsCol" value="#9fb0d3" title="폰 색깔">
 <button id="smsNext">다음 ▶</button></div></div>
     <div class="smwr"><input id="smsIn" maxlength="20" placeholder="머리 위에 띄울 문자 (20자)" autocomplete="off"><button class="smgo" id="smsGo">전송</button></div></div>`);
-  $('#smsPrev').onclick = () => { if (chatIdx > 0) { chatIdx--; smsRender(); } };
-  $('#smsNext').onclick = () => { if (chatIdx < chatLog.length - 1) { chatIdx++;   $('#smsSkin').onclick = () => { const s = $('#sms'); smsColor(''); try { localStorage.removeItem('dt_smc'); } catch (e) {} s.classList.toggle('pk');
- try { localStorage.setItem('dt_sms', s.classList.contains('pk') ? 'pk' : ''); } catch (e) {} };
+    $('#smsNext').onclick = () => { if (chatIdx < chatLog.length - 1) { chatIdx++; smsRender(); } };
+  $('#smsSkin').onclick = () => { const s = $('#sms'); smsColor(''); try { localStorage.removeItem('dt_smc'); } catch (e) {} s.classList.toggle('pk'); try { localStorage.setItem('dt_sms', s.classList.contains('pk') ? 'pk' : ''); } catch (e) {} };
     let mc = ''; try { mc = localStorage.getItem('dt_smc') || ''; } catch (e) {}
   if (mc) { $('#smsCol').value = mc; smsColor(mc); }
   $('#smsCol').oninput = e => { smsColor(e.target.value); try { localStorage.setItem('dt_smc', e.target.value); } catch (er) {} };
