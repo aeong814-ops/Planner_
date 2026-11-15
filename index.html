@@ -176,6 +176,24 @@ input.f,textarea.f{width:100%;padding:8px;border:1px solid var(--line);border-ra
 .sms.pk .smwr input{border-color:#e06fa3;background:#fff8fb}
 .sms.pk .smwr .smgo{background:#ef6fa5;border-color:#c0538a;color:#fff;border-radius:12px}
 
+ .nb{position:relative;background:#cfe6fb;border-radius:14px;padding:10px;box-shadow:0 3px 0 #9dbfe0,inset 0 0 0 3px #b9d9f6;margin-right:10px}
+.nbt{position:absolute;right:-10px;width:14px;height:22px;border-radius:0 4px 4px 0}
+.nbspread{position:relative;display:flex;background:#a9b4bf;border-radius:6px;padding:3px;animation:nbf .25s}
+.nbspread:before{content:'';position:absolute;left:50%;top:6px;bottom:6px;width:20px;margin-left:-10px;background:#c9d0d7;z-index:1}
+.nbspread:after{content:'';position:absolute;left:50%;top:8px;bottom:8px;width:26px;margin-left:-13px;background:repeating-linear-gradient(to bottom,#2b2b2b 0 5px,transparent 5px 18px);border-radius:3px;z-index:2;pointer-events:none}
+.nbspread.one:before,.nbspread.one:after{display:none}
+.nbp{flex:1;min-width:0;height:380px;overflow-y:auto;box-sizing:border-box;padding:14px 18px;background:radial-gradient(#c7d1da 1px,transparent 1.3px) 0 0/12px 12px,#fff;position:relative}
+.nbspread:not(.one) .nbp:first-child{padding-right:24px}.nbspread:not(.one) .nbp:last-child{padding-left:24px}
+.nbp .post{border:0;background:none;padding:0;margin:0;box-shadow:none}
+.nbp .pimg{max-width:100%;max-height:170px;object-fit:cover}
+.nbe{color:#9aa;text-align:center;margin-top:40%;line-height:1.8}
+.nbnav{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:#668}
+@keyframes nbf{from{opacity:.25;transform:translateX(var(--d,0))}to{opacity:1;transform:none}}
+.nbp .ph2{flex-wrap:wrap;gap:4px}.nbp .btn{white-space:nowrap}
+.nbcv{position:absolute;left:18px;top:-2px;transform:translateY(-50%);background:#fff;border:2px solid #556;border-radius:10px;padding:1px 12px;font-size:14px;color:#345;z-index:3;white-space:nowrap}
+.nb{margin-top:12px}
+
+ 
 @media(max-width:860px){
  .book{grid-template-columns:1fr}.title{grid-column:1}.ring{display:none}
  .left{min-height:0}.tabs{flex-direction:row;flex-wrap:wrap;margin:0;order:-1;grid-column:1}
@@ -1220,6 +1238,61 @@ function cal(){
 
 /* ================= 다이어리 (친구와 공유) ================= */
 let pendingImg = '';
+ /* ================= 공책형 다이어리 ================= */
+const NB_STK = ['📖','🌸','⭐','🍀','🐰','🌙','🎧','💌','🍓','🐻'], NB_COL = ['#cfe6fb','#f9d3de','#e3dafc','#d6f0dc','#fbe7b8','#e0e0e0','#8fa3c7'], NB_PT = [['','무늬 없음'],['dots','물방울'],['stripe','줄무늬'],['check','체크']];
+function nbCfg(o){
+  o = Object.assign({ c: '#cfe6fb', t: 'My Diary', s: '📖', pt: '' }, o || {});
+  if (!/^#[0-9a-f]{6}$/i.test(o.c)) o.c = '#cfe6fb';
+  if (!NB_STK.includes(o.s)) o.s = '📖';
+  if (!NB_PT.some(x => x[0] === o.pt)) o.pt = '';
+  o.t = String(o.t || '').slice(0, 14); return o;
+}
+function nbCoverCSS(n){
+  const d = darken(n.c, .3), l = lighten(n.c, .5);
+  const pat = { dots: `radial-gradient(${l} 22%,transparent 24%) 0 0/14px 14px`, stripe: `repeating-linear-gradient(45deg,${l} 0 6px,transparent 6px 14px)`, check: `conic-gradient(${l} 25%,transparent 0 50%,${l} 0 75%,transparent 0) 0 0/20px 20px` }[n.pt];
+  return `background:${pat ? pat + ',' : ''}${n.c};box-shadow:0 3px 0 ${d},inset 0 0 0 3px ${lighten(n.c, .3)}`;
+}
+function notebook(arr, el, cfg0, ro){
+  let cfg = nbCfg(cfg0);
+  const per = el.clientWidth < 520 ? 1 : 2;
+  const list = arr.filter(x => x.p).reverse();
+  const pad = (per - list.length % per) % per, pages = Array(pad).fill(null).concat(list);
+  const total = Math.max(1, Math.ceil(pages.length / per)); let s = total - 1, dir = 0;
+  el.innerHTML = '<div id="nbw"></div>' + (ro ? '' : '<div class="row" style="margin-top:6px"><button class="btn g sm" id="nbCv">🎨 표지 꾸미기</button></div><div class="box hidden" id="nbed"></div>');
+  const draw = () => {
+    const pg = k => { const x = pages[k]; return `<div class="nbp">${x ? postHTML(x.p, ro ? '' : x.i) : (list.length ? '' : '<div class="nbe">아직 쓴 글이 없어요<br>첫 페이지를 써 보세요 ✏️</div>')}</div>`; };
+    let h = ''; for (let k = s * per; k < s * per + per; k++) h += pg(k);
+    const w = $('#nbw'); if (!w) return;
+    w.innerHTML = `<div class="nb" style="${nbCoverCSS(cfg)}"><div class="nbcv">${cfg.s} ${esc(cfg.t)}</div><i class="nbt" style="top:44px;background:${lighten(cfg.c, .35)}"></i><i class="nbt" style="top:74px;background:${cfg.c}"></i><i class="nbt" style="top:104px;background:${darken(cfg.c, .4)}"></i>
+      <div class="nbspread ${per === 1 ? 'one' : ''}" id="nbsp" style="--d:${dir * 24}px">${h}</div></div>
+      <div class="nbnav"><button class="btn g sm" id="nbPrev">◀ 이전 장</button><span>${s + 1} / ${total}</span><button class="btn g sm" id="nbNext">다음 장 ▶</button></div>`;
+    hydrate(w);
+    const go2 = d => { const n = s + d; if (n < 0 || n >= total) return; s = n; dir = d; draw(); };
+    $('#nbPrev').onclick = () => go2(-1); $('#nbNext').onclick = () => go2(1);
+    let x0 = null; const sp = $('#nbsp');
+    sp.onpointerdown = e => { x0 = e.target.closest('button,input,img,textarea') ? null : e.clientX; };
+    sp.onpointerup = e => { if (x0 == null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 60) go2(dx < 0 ? 1 : -1); };
+  };
+  draw();
+  if (ro) return;
+  const save = () => { dir = 0; profile.nb = { ...cfg }; saveProfile(); draw(); };
+  const ed = () => {
+    $('#nbed').innerHTML = `<div class="lbl" style="margin-top:0">표지 색</div><div>${NB_COL.map(c => `<span class="sw ${cfg.c === c ? 'on' : ''}" data-nc="${c}" style="background:${c}"></span>`).join('')} <input type="color" id="nbC" value="${cfg.c}" style="vertical-align:middle;width:34px;height:26px;padding:0;border:0"></div>
+      <div class="lbl">무늬</div><div>${NB_PT.map(([v, n]) => `<button class="btn sm ${cfg.pt === v ? '' : 'g'}" data-np="${v}">${n}</button>`).join(' ')}</div>
+      <div class="lbl">스티커</div><div>${NB_STK.map(v => `<button class="btn sm ${cfg.s === v ? '' : 'g'}" data-ns="${v}" style="font-size:18px">${v}</button>`).join(' ')}</div>
+      <div class="lbl">공책 제목</div><input class="f" id="nbT" maxlength="14" value="${esc(cfg.t)}" placeholder="공책 제목 (14자)">`;
+    $('#nbC').oninput = e => { cfg.c = e.target.value; save(); };
+    $('#nbT').oninput = e => { cfg.t = e.target.value.slice(0, 14); save(); };
+  };
+  $('#nbCv').onclick = () => { const b = $('#nbed'); b.classList.toggle('hidden'); if (!b.classList.contains('hidden')) ed(); };
+  $('#nbed').onclick = e => {
+    const c = e.target.closest('[data-nc]'), p = e.target.closest('[data-np]'), k = e.target.closest('[data-ns]');
+    if (c) cfg.c = c.dataset.nc; else if (p) cfg.pt = p.dataset.np; else if (k) cfg.s = k.dataset.ns; else return;
+    save(); ed();
+  };
+}
+
+
 async function story(){
   pendingImg = '';
   C(`<h3 class="sec hd">오늘의 다이어리 ✏️</h3>
@@ -1247,10 +1320,12 @@ async function story(){
     if (x && confirm('이 글을 지울까요?')) { await DB.del('post', x.dataset.del); story(); }
   };
   try {
-    const ids = (await DB.list('post', me + '/')).sort().reverse().slice(0, 30);
+        const ids = (await DB.list('post', me + '/')).sort().reverse().slice(0, 100);
     const arr = await Promise.all(ids.map(async i => ({ i, p: await DB.get('post', i) })));
     const el = $('#plist'); if (!el) return;
-    el.innerHTML = arr.filter(x => x.p).map(x => postHTML(x.p, x.i)).join('') || '<span style="color:#aaa">아직 쓴 글이 없어요</span>';hydrate(el); 
+    notebook(arr, el, profile.nb);
+
+
   } catch (e) { const el = $('#plist'); if (el) el.textContent = '불러오지 못했어요'; }
 }
 
@@ -1790,11 +1865,11 @@ function visit(v){
     const bp = $('#bringPet'); if (bp) bp.onclick = () => { profile.bring = !profile.bring; saveProfile(); bp.className = 'btn ' + (profile.bring ? 'o' : 'g'); bp.textContent = `🐣 ${profile.pet.n} ${profile.bring ? '데려가는 중 ✓' : '데려가기'}`; toast(profile.bring ? `${profile.pet.n}을(를) 데려왔어요! 🐣` : '집에 두고 왔어요'); watchRoom(v.id); };
    renderGuest(v.id, $('#gb'));
   if (playing && p.bgm.url) startBGM(p.bgm);
-  friendPosts(v.id, 10).then(r => {
+  friendPosts(v.id, 30).then(r => {
     const el = $('#vp'); if (!el) return;
     if (!r) el.textContent = '불러오지 못했어요';
     else if (r.locked) el.innerHTML = '<span style="color:#aaa">🔒 이 친구가 나를 친구로 추가하면 다이어리를 볼 수 있어요</span>';
-    else el.innerHTML = r.posts.map(x => postHTML(x)).join('') || '<span style="color:#aaa">아직 쓴 글이 없어요</span>';
+        else notebook(r.posts.map(x => ({ i: '', p: x })), el, p.nb, true);
   }).catch(() => { const el = $('#vp'); if (el) el.textContent = '불러오지 못했어요'; });
 }
 
