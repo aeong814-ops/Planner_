@@ -193,7 +193,24 @@ input.f,textarea.f{width:100%;padding:8px;border:1px solid var(--line);border-ra
 .nbcv{position:absolute;left:18px;top:-2px;transform:translateY(-50%);background:#fff;border:2px solid #556;border-radius:10px;padding:1px 12px;font-size:14px;color:#345;z-index:3;white-space:nowrap}
 .nb{margin-top:12px}
 
- 
+ .ipod{width:250px;margin:6px auto 14px;padding:16px 14px 18px;border-radius:26px;background:linear-gradient(135deg,#f6f8fa,#b9c2cb 38%,#eef1f4 58%,#98a2ac);border:2px solid #7d8791;box-shadow:0 5px 0 #6c7680,0 10px 18px rgba(0,0,0,.18),inset 0 0 0 2px #fff}
+.ipscr{background:linear-gradient(#a9dcff,#7cc3fb);border:3px solid #5a6a78;border-radius:10px;padding:8px 10px 8px;color:#0d2f66;box-shadow:0 0 14px #4aa8ff,inset 0 0 0 2px #d5eeff;height:196px;box-sizing:border-box;position:relative;overflow:hidden}
+.iph{display:flex;justify-content:space-between;align-items:center;font-size:14px}
+.ipbat{display:inline-block;width:22px;height:10px;border:2px solid #0d2f66;border-radius:2px;background:linear-gradient(90deg,#0d2f66 78%,transparent 78%)}
+.ipn{font-size:13px;margin-top:2px}
+.iphr{position:relative;text-align:center;margin-top:2px;height:76px}
+.sp{position:absolute;color:#0d2f66;font-size:14px}.s1{left:22px;top:22px}.s2{right:26px;top:4px}.s3{right:40px;top:62px}
+.ipt{text-align:center;font-size:15px;margin-top:2px;overflow:hidden;white-space:nowrap}
+.ipt span{display:inline-block}.ipt .mq{animation:ipm 8s linear infinite}
+@keyframes ipm{0%,10%{transform:translateX(0)}90%,100%{transform:translateX(-45%)}}
+.ipb{display:flex;align-items:center;gap:5px;font-size:12px;margin-top:10px}
+.ipbar{flex:1;height:8px;border:2px solid #0d2f66;background:#e4f4ff}.ipbar i{display:block;height:100%;width:0;background:#0d2f66}
+.ipwh{position:relative;width:196px;height:196px;margin:18px auto 0;border-radius:50%;background:radial-gradient(circle,#e1e5e9,#b3bbc3 70%,#cdd3d9);border:2px solid #8a949e;box-shadow:inset 0 0 0 4px rgba(255,255,255,.55)}
+.ipwh button{position:absolute;border:0;background:none;cursor:pointer;color:#3aa1ff;font-weight:700;text-shadow:0 0 6px #7cc3ff;padding:6px}
+.ipm{top:12px;left:50%;transform:translateX(-50%);font-size:15px}.ipl{left:12px;top:50%;transform:translateY(-50%);font-size:15px}.ipr{right:12px;top:50%;transform:translateY(-50%);font-size:15px}.ipbt{bottom:12px;left:50%;transform:translateX(-50%);font-size:14px}
+.ipwh .ipc{left:50%;top:50%;width:74px;height:74px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,#fafbfc,#aab3bb);border:3px solid #6fb7ff;box-shadow:0 0 10px #3aa1ff,inset 0 0 0 3px #d9dfe4;padding:0}
+.ipwh .ipc:active{transform:translate(-50%,-50%) scale(.95)}
+
 @media(max-width:860px){
  .book{grid-template-columns:1fr}.title{grid-column:1}.ring{display:none}
  .left{min-height:0}.tabs{flex-direction:row;flex-wrap:wrap;margin:0;order:-1;grid-column:1}
@@ -1736,17 +1753,61 @@ function visitPet(p){
   return `<div class="hd bl" style="margin-top:10px">🐣 ${esc(q.n)} <small>${PSTAGE[q.st] || ''}${q.ty && PT[q.ty] ? ' · ' + PT[q.ty].n : ''}</small></div><div style="width:90px;margin:6px 0">${petSVG({ st: q.st, ty: q.ty, m: q.md, ac: q.ac })}</div>`;
 }
 /* ================= 쥬크박스 ================= */
+ /* ================= 아이팟 쥬크박스 ================= */
+let ipT = null;
+const IP_HEART = ['..xxx...xxx..', '.xxxxx.xxxxx.', 'xxxxxxxxxxxxx', 'xxxxxxxxxxxxx', 'xxxxxxxxxxxxx', '.xxxxxxxxxxx.', '..xxxxxxxxx..', '...xxxxxxx...', '....xxxxx....', '.....xxx.....', '......x......'];
+const ipodHTML = () => `<div class="ipod" id="ipod"><div class="ipscr"><div class="iph"><span id="ipSt">▶ Now Playing</span><i class="ipbat"></i></div>
+  <div class="ipn" id="ipN">-/0</div>
+  <div class="iphr"><span class="sp s1">✦</span><span class="sp s2">✦</span><span class="sp s3">✦</span>
+  <svg viewBox="0 0 13 11" width="86" height="73" shape-rendering="crispEdges">${IP_HEART.map((r, y) => [...r].map((c, x) => c === 'x' ? `<rect x="${x + .06}" y="${y + .06}" width=".88" height=".88" fill="#1e5aa8"/>` : '').join('')).join('')}</svg></div>
+  <div class="ipt"><span id="ipT">노래 없음</span></div>
+  <div class="ipb"><span id="ipC">0:00</span><div class="ipbar"><i id="ipBar"></i></div><span id="ipD">0:00</span></div></div>
+  <div class="ipwh"><button class="ipm" id="ipMenu">MENU</button><button class="ipl" id="ipPrev">◀◀</button><button class="ipr" id="ipNext">▶▶</button><button class="ipbt ipplay" id="ipBt">▶❚❚</button><button class="ipc ipplay" id="ipPlay" aria-label="재생"></button></div></div>`;
+function ipodInit(){
+  clearInterval(ipT);
+  const pl = profile.pl || [];
+  const idx = () => curBGM && curBGM.url ? pl.findIndex(x => x.url === curBGM.url) : -1;
+  const fm = t => { t = Math.max(0, Math.floor(+t || 0)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+  const step = d => {
+    if (!pl.length) return toast('아래에서 노래를 저장하면 플레이리스트에 쌓여요');
+    const i = idx(), n = i < 0 ? (d > 0 ? 0 : pl.length - 1) : (i + d + pl.length) % pl.length;
+    profile.bgm = pl[n]; saveProfile(); startBGM(pl[n]);
+  };
+  $('#ipPrev').onclick = () => step(-1); $('#ipNext').onclick = () => step(1);
+  document.querySelectorAll('.ipplay').forEach(b => b.onclick = () => {
+    if (playing) stopBGM(); else if (curBGM && curBGM.url) startBGM(curBGM); else if (pl.length) step(1); else toast('아래에서 노래를 저장해 보세요');
+  });
+  $('#ipMenu').onclick = () => { const e = $('#pl'); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+  const draw = () => {
+    if (!$('#ipod')) return clearInterval(ipT);
+    let cur = 0, dur = 0;
+    try { if (curBGM && parseYT(curBGM.url)) { if (ytP && ytP.getCurrentTime) { cur = ytP.getCurrentTime(); dur = ytP.getDuration(); } } else { cur = audioEl.currentTime; dur = audioEl.duration; } } catch (e) {}
+    if (!(dur > 0) || !isFinite(dur)) dur = 0;
+    const i = idx(), set = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+    set('#ipSt', playing ? '▶ Now Playing' : '❚❚ Paused');
+    set('#ipN', `${i < 0 ? '-' : i + 1}/${pl.length}`);
+    const t = curBGM && curBGM.url ? (curBGM.title || '배경음악') : '노래 없음'; const te = $('#ipT');
+    if (te && te.textContent !== t) { te.textContent = t; te.classList.toggle('mq', t.length > 14); }
+    set('#ipC', fm(cur)); set('#ipD', fm(dur));
+    const bar = $('#ipBar'); if (bar) bar.style.width = (dur ? Math.min(100, cur / dur * 100) : 0) + '%';
+  };
+  draw(); ipT = setInterval(draw, 500);
+}
+
 function juke(){
   profile.pl = profile.pl || [];
   const pl = profile.pl;
   C(`<h3 class="sec hd">쥬크박스 · 내 배경음악</h3>
+    ${ipodHTML()}
+
   <p style="color:#888;line-height:1.6">유튜브 링크 또는 mp3 주소를 붙여넣으면 내 미니홈피 배경음악이 돼요. 친구가 놀러 오면 이 노래를 들을 수 있어요.<br>⚠️ 공식 뮤직비디오는 '퍼가기'가 막힌 경우가 많아요. 안 나오면 가사 영상이나 오디오 영상 같은 다른 업로드 링크를 써 보세요.</p>
   <input class="f" id="bt" placeholder="노래 제목" value="${esc(profile.bgm.title)}"><input class="f" id="bu" placeholder="https://www.youtube.com/watch?v=..." value="${esc(profile.bgm.url)}">
   <div class="row"><button class="btn" id="bs">저장하고 재생</button><button class="btn g" id="bd">노래 지우기</button></div>
     <div class="row" style="margin-top:16px"><input class="f" id="pn" maxlength="20" placeholder="플레이리스트 이름" value="${esc(profile.plName || '내 플레이리스트')}"><button class="btn sm" id="pns">이름 저장</button></div>
   <div style="color:#888;margin:4px 0">${pl.length}곡</div>
   <div id="pl">${pl.map((s, i) => `<div class="fl" style="padding:4px 0"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🎵 ${esc(s.title || s.url)}</span><button class="btn sm" data-pp="${i}">▶</button><button class="btn g sm" data-pd="${i}">×</button></div>`).join('') || '<span style="color:#aaa">노래를 저장하면 여기에 차곡차곡 쌓여요</span>'}</div>`);
-  $('#bs').onclick = () => {
+   ipodInit();
+ $('#bs').onclick = () => {
     const s = { title: $('#bt').value.trim(), url: $('#bu').value.trim() };
     profile.bgm = s;
     if (s.url && !pl.some(x => x.url === s.url)) { pl.unshift(s); pl.splice(50); }
